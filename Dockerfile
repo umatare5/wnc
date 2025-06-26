@@ -5,7 +5,7 @@
 FROM golang:1.24-alpine AS builder
 
 # Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates=20230506-r0 git=2.40.1-r0
+RUN apk --no-cache add ca-certificates git
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o wnc ./cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o wnc ./cmd/main.go
 
 # Final stage - minimal container
 FROM scratch
