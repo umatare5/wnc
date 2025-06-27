@@ -1,4 +1,4 @@
-package cli
+package show
 
 import "github.com/umatare5/wnc/internal/config"
 
