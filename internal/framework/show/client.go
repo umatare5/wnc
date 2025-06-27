@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/dustin/go-humanize"
 	"github.com/umatare5/wnc/internal/application"
 	"github.com/umatare5/wnc/internal/config"
 	"github.com/umatare5/wnc/internal/infrastructure"
+	"github.com/umatare5/wnc/pkg/humanize"
 	"github.com/umatare5/wnc/pkg/tablewriter"
 )
 
@@ -105,8 +105,8 @@ func (cc *ClientCli) formatShowClientRow(client *application.ShowClientData) ([]
 		fmt.Sprintf("%d dBm", client.TrafficStats.MostRecentRssi),
 		fmt.Sprintf("%d dB", client.TrafficStats.MostRecentSnr),
 		fmt.Sprintf("%d Streams", client.TrafficStats.SpatialStream),
-		fmt.Sprintf("%s KB", humanize.Comma(bytesRx/1024)),
-		fmt.Sprintf("%s KB", humanize.Comma(bytesTx/1024)),
+		humanize.FormatBytes(bytesRx),
+		humanize.FormatBytes(bytesTx),
 		client.CommonOperData.ApName,
 		client.Controller,
 	}, nil
