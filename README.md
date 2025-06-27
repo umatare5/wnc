@@ -13,7 +13,7 @@ A command-line interface tool for managing Cisco Catalyst 9800 Wireless Network 
 - **🐚 Shell-Friendly Design**: Use shell features—piping, loops, scripting—for advanced automation workflows
 - **📊 Clear Output**: Able to show data in table format optimized for easy reading and script processing
 
-<img alt="Demo of wnc show overview" src="https://github.com/umatare5/wnc-dev/blob/main/docs/demo/wnc_show_overview_demo.gif" />
+<img alt="Demo of wnc show overview" src="https://github.com/umatare5/wnc/blob/main/docs/demo/wnc_show_overview_demo.gif" />
 
 💡 This CLI provides a lightweight and efficient alternative to certain features of [Cisco Catalyst Center](https://www.cisco.com/site/us/en/products/networking/catalyst-center/index.html).
 
