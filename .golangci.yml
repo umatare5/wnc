@@ -3,7 +3,7 @@
 
 run:
   timeout: 5m
-  modules-download-mode: readonly
+  # Removed modules-download-mode to allow flexible module operations
 
 linters:
   enable:
