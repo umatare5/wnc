@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dustin/go-humanize"
 	"github.com/umatare5/wnc/internal/application"
 	"github.com/umatare5/wnc/internal/config"
 	"github.com/umatare5/wnc/internal/infrastructure"
+	"github.com/umatare5/wnc/pkg/humanize"
 	"github.com/umatare5/wnc/pkg/tablewriter"
 )
 
@@ -81,7 +81,7 @@ func (wc *WlanCli) formatShowWlanRow(wlan *application.ShowWlanData) ([]string, 
 		fmt.Sprintf("%d", wlan.WlanCfgEntry.WlanID),
 		wlan.PolicyName,
 		wlan.WlanPolicy.InterfaceName,
-		fmt.Sprintf("%ss", humanize.Comma(int64(wlan.WlanPolicy.WlanTimeout.SessionTimeout))),
+		humanize.FormatTimeoutSeconds(int64(wlan.WlanPolicy.WlanTimeout.SessionTimeout)),
 		wc.convertDhcpParamsIsDhcpEnabled(wlan.WlanPolicy.DhcpParams.IsDhcpEnabled),
 		wlan.WlanPolicy.PerSsidQos.EgressServiceName,
 		wlan.WlanPolicy.PerSsidQos.IngressServiceName,
