@@ -50,11 +50,15 @@ jobs:
         run: |
           go version
           go env
+          echo "=== Checking Go modules ==="
           go list -m all
+          echo "=== Testing basic build ==="
+          go build ./...
+          echo "=== Verifying imports ==="
+          go list -f '{{.ImportPath}}: {{.Imports}}' ./...
 
       # Run golangci-lint
       - name: Run golangci-lint
         run: |
-          # Force rebuild from scratch to avoid cache issues
-          go build -a ./...
-          golangci-lint run --timeout 5m
+          echo "=== Running golangci-lint with verbose output ==="
+          golangci-lint run --timeout 5m --verbose --print-resources-usage
