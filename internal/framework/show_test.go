@@ -6,7 +6,7 @@ import (
 
 	"github.com/umatare5/wnc/internal/application"
 	"github.com/umatare5/wnc/internal/config"
-	cli "github.com/umatare5/wnc/internal/framework/show"
+	"github.com/umatare5/wnc/internal/framework/show"
 	"github.com/umatare5/wnc/internal/infrastructure"
 )
 
@@ -122,7 +122,7 @@ func TestShowCliInvokeSubClis(t *testing.T) {
 
 			// Check that each sub-CLI has the correct dependency references
 			switch v := got.(type) {
-			case *cli.ClientCli:
+			case *show.ClientCli:
 				if v.Config != cfg {
 					t.Errorf("ClientCli.Config = %v, want %v", v.Config, cfg)
 				}
@@ -132,7 +132,7 @@ func TestShowCliInvokeSubClis(t *testing.T) {
 				if v.Usecase != uc {
 					t.Errorf("ClientCli.Usecase = %v, want %v", v.Usecase, uc)
 				}
-			case *cli.ApCli:
+			case *show.ApCli:
 				if v.Config != cfg {
 					t.Errorf("ApCli.Config = %v, want %v", v.Config, cfg)
 				}
@@ -142,7 +142,7 @@ func TestShowCliInvokeSubClis(t *testing.T) {
 				if v.Usecase != uc {
 					t.Errorf("ApCli.Usecase = %v, want %v", v.Usecase, uc)
 				}
-			case *cli.ApTagCli:
+			case *show.ApTagCli:
 				if v.Config != cfg {
 					t.Errorf("ApTagCli.Config = %v, want %v", v.Config, cfg)
 				}
@@ -152,7 +152,7 @@ func TestShowCliInvokeSubClis(t *testing.T) {
 				if v.Usecase != uc {
 					t.Errorf("ApTagCli.Usecase = %v, want %v", v.Usecase, uc)
 				}
-			case *cli.WlanCli:
+			case *show.WlanCli:
 				if v.Config != cfg {
 					t.Errorf("WlanCli.Config = %v, want %v", v.Config, cfg)
 				}
@@ -162,7 +162,7 @@ func TestShowCliInvokeSubClis(t *testing.T) {
 				if v.Usecase != uc {
 					t.Errorf("WlanCli.Usecase = %v, want %v", v.Usecase, uc)
 				}
-			case *cli.OverviewCli:
+			case *show.OverviewCli:
 				if v.Config != cfg {
 					t.Errorf("OverviewCli.Config = %v, want %v", v.Config, cfg)
 				}
@@ -269,7 +269,7 @@ func TestShowCliDependencyInjection(t *testing.T) {
 			clis := []interface{}{clientCli, apCli, apTagCli, wlanCli, overviewCli}
 			for i, c := range clis {
 				switch v := c.(type) {
-				case *cli.ClientCli:
+				case *show.ClientCli:
 					if v.Config != tt.cfg {
 						t.Errorf("Sub-CLI %d: Config not properly injected", i)
 					}
@@ -279,7 +279,7 @@ func TestShowCliDependencyInjection(t *testing.T) {
 					if v.Usecase != tt.uc {
 						t.Errorf("Sub-CLI %d: Usecase not properly injected", i)
 					}
-				case *cli.ApCli:
+				case *show.ApCli:
 					if v.Config != tt.cfg {
 						t.Errorf("Sub-CLI %d: Config not properly injected", i)
 					}
@@ -289,7 +289,7 @@ func TestShowCliDependencyInjection(t *testing.T) {
 					if v.Usecase != tt.uc {
 						t.Errorf("Sub-CLI %d: Usecase not properly injected", i)
 					}
-				case *cli.ApTagCli:
+				case *show.ApTagCli:
 					if v.Config != tt.cfg {
 						t.Errorf("Sub-CLI %d: Config not properly injected", i)
 					}
@@ -299,7 +299,7 @@ func TestShowCliDependencyInjection(t *testing.T) {
 					if v.Usecase != tt.uc {
 						t.Errorf("Sub-CLI %d: Usecase not properly injected", i)
 					}
-				case *cli.WlanCli:
+				case *show.WlanCli:
 					if v.Config != tt.cfg {
 						t.Errorf("Sub-CLI %d: Config not properly injected", i)
 					}
@@ -309,7 +309,7 @@ func TestShowCliDependencyInjection(t *testing.T) {
 					if v.Usecase != tt.uc {
 						t.Errorf("Sub-CLI %d: Usecase not properly injected", i)
 					}
-				case *cli.OverviewCli:
+				case *show.OverviewCli:
 					if v.Config != tt.cfg {
 						t.Errorf("Sub-CLI %d: Config not properly injected", i)
 					}

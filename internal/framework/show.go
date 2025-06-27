@@ -3,7 +3,7 @@ package framework
 import (
 	"github.com/umatare5/wnc/internal/application"
 	"github.com/umatare5/wnc/internal/config"
-	cli "github.com/umatare5/wnc/internal/framework/show"
+	"github.com/umatare5/wnc/internal/framework/show"
 	"github.com/umatare5/wnc/internal/infrastructure"
 )
 
@@ -24,8 +24,8 @@ func NewShowCli(c *config.Config, r *infrastructure.Repository, u *application.U
 }
 
 // InvokeClientCli returns a new ClientCli struct
-func (sc *ShowCli) InvokeClientCli() *cli.ClientCli {
-	return &cli.ClientCli{
+func (sc *ShowCli) InvokeClientCli() *show.ClientCli {
+	return &show.ClientCli{
 		Config:     sc.Config,
 		Repository: sc.Repository,
 		Usecase:    sc.Usecase,
@@ -33,8 +33,8 @@ func (sc *ShowCli) InvokeClientCli() *cli.ClientCli {
 }
 
 // InvokeApCli returns a new ApCli struct
-func (sc *ShowCli) InvokeApCli() *cli.ApCli {
-	return &cli.ApCli{
+func (sc *ShowCli) InvokeApCli() *show.ApCli {
+	return &show.ApCli{
 		Config:     sc.Config,
 		Repository: sc.Repository,
 		Usecase:    sc.Usecase,
@@ -42,8 +42,8 @@ func (sc *ShowCli) InvokeApCli() *cli.ApCli {
 }
 
 // InvokeApTagCli returns a new ApTagCli struct
-func (sc *ShowCli) InvokeApTagCli() *cli.ApTagCli {
-	return &cli.ApTagCli{
+func (sc *ShowCli) InvokeApTagCli() *show.ApTagCli {
+	return &show.ApTagCli{
 		Config:     sc.Config,
 		Repository: sc.Repository,
 		Usecase:    sc.Usecase,
@@ -51,8 +51,8 @@ func (sc *ShowCli) InvokeApTagCli() *cli.ApTagCli {
 }
 
 // InvokeWlanCli returns a new WlanCli struct
-func (sc *ShowCli) InvokeWlanCli() *cli.WlanCli {
-	return &cli.WlanCli{
+func (sc *ShowCli) InvokeWlanCli() *show.WlanCli {
+	return &show.WlanCli{
 		Config:     sc.Config,
 		Repository: sc.Repository,
 		Usecase:    sc.Usecase,
@@ -60,8 +60,8 @@ func (sc *ShowCli) InvokeWlanCli() *cli.WlanCli {
 }
 
 // InvokeOverviewCli returns a new OverviewCli struct
-func (sc *ShowCli) InvokeOverviewCli() *cli.OverviewCli {
-	return &cli.OverviewCli{
+func (sc *ShowCli) InvokeOverviewCli() *show.OverviewCli {
+	return &show.OverviewCli{
 		Config:     sc.Config,
 		Repository: sc.Repository,
 		Usecase:    sc.Usecase,

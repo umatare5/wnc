@@ -3,7 +3,7 @@ package framework
 import (
 	"github.com/umatare5/wnc/internal/application"
 	"github.com/umatare5/wnc/internal/config"
-	cli "github.com/umatare5/wnc/internal/framework/generate"
+	"github.com/umatare5/wnc/internal/framework/generate"
 	"github.com/umatare5/wnc/internal/infrastructure"
 )
 
@@ -24,8 +24,8 @@ func NewGenerateCli(c *config.Config, r *infrastructure.Repository, u *applicati
 }
 
 // InvokeTokenCli returns a new TokenCli struct
-func (gc *GenerateCli) InvokeTokenCli() *cli.TokenCli {
-	return &cli.TokenCli{
+func (gc *GenerateCli) InvokeTokenCli() *generate.TokenCli {
+	return &generate.TokenCli{
 		Config:     gc.Config,
 		Repository: gc.Repository,
 		Usecase:    gc.Usecase,
