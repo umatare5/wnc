@@ -59,3 +59,13 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `docs(readme): update usage examples`
 
 ---
+
+## 📝 Commit Guidelines
+
+**MUST** follow these commit practices:
+
+- **Meaningful Commits:** Split files into meaningful units when committing. Group related changes together and commit them as logical units rather than committing all changes at once.
+
+- **Respect .gitignore:** Always respect `.gitignore` rules when committing. Do not include ignored files such as `.copilot_reports/`, temporary files, or build artifacts in commits.
+
+---
