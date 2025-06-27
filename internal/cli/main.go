@@ -7,7 +7,7 @@ import (
 
 	generateCmd "github.com/umatare5/wnc/internal/cli/generate"
 	showCmd "github.com/umatare5/wnc/internal/cli/show"
-	"github.com/urfave/cli/v3"
+	cli "github.com/urfave/cli/v3"
 )
 
 // Run initializes and starts the CLI application.

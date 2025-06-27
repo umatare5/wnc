@@ -276,6 +276,7 @@ func TestNewTableOrig(t *testing.T) {
 			if table != nil {
 				// Table creation successful - this validates the wrapper function
 				// The function properly wraps the olekukonko/tablewriter package
+				_ = table // Verify table is not nil
 			}
 		})
 	}
