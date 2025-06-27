@@ -33,16 +33,28 @@ jobs:
       # Install golangci-lint
       - name: Install golangci-lint
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.62.2
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
 
-      # Clean and setup Go modules
+      # Clean and setup Go modules aggressively
       - name: Clean Go cache and modules
         run: |
-          go clean -modcache -cache -testcache
+          go clean -modcache -cache -testcache -fuzzcache
+          rm -rf $(go env GOCACHE) $(go env GOMODCACHE) || true
+          rm -rf vendor || true
           go mod download
           go mod tidy
+          go mod verify
+
+      # Verify Go environment
+      - name: Verify Go environment
+        run: |
+          go version
+          go env
+          go list -m all
 
       # Run golangci-lint
       - name: Run golangci-lint
         run: |
+          # Force rebuild from scratch to avoid cache issues
+          go build -a ./...
           golangci-lint run --timeout 5m
