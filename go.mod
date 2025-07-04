@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/jinzhu/configor v1.2.2
-	github.com/olekukonko/tablewriter v1.0.7
+	github.com/olekukonko/tablewriter v1.0.8
 	github.com/sirupsen/logrus v1.9.3
 	github.com/umatare5/cisco-ios-xe-wireless-go v0.1.0
 	github.com/urfave/cli/v3 v3.3.8
