@@ -4,6 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/umatare5/wnc.svg)](https://pkg.go.dev/github.com/umatare5/wnc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/umatare5/wnc)](https://goreportcard.com/report/github.com/umatare5/wnc)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/umatare5/wnc/blob/main/LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10820/badge)](https://www.bestpractices.dev/projects/10820)
 
 A command-line interface tool for managing Cisco Catalyst 9800 Wireless Network Controllers.
 
