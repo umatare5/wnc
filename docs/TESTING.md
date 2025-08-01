@@ -71,7 +71,7 @@ The project includes convenient Makefile targets for testing:
 | `make test-unit`        | Run unit tests only with enhanced output formatting.               |
 | `make test-integration` | Run integration tests with enhanced output. \* Requires WNC access |
 
-<details><summary>Example of gotestfmt Enhanced Output</summary>
+<details><summary>Example of gotestsum Enhanced Output</summary>
 
 ```text
 📦 github.com/umatare5/wnc/cmd (85.7% coverage)
@@ -172,7 +172,7 @@ This CLI follows a layered testing approach that mirrors its clean architecture:
 
 For efficient testing workflow, start with unit tests and gradually move to integration tests:
 
-1. **Install Dependencies**: `make deps` - Install gotestfmt and other development tools.
+1. **Install Dependencies**: `make deps` - Install gotestsum and other development tools.
 2. **Unit Tests First**: `make test-unit` - Ensure basic functionality with enhanced output.
 3. **Code Quality Check**: `make lint` - Run linting to catch potential issues.
 4. **Environment Setup**: Configure environment variables for integration tests.
@@ -189,7 +189,7 @@ For efficient testing workflow, start with unit tests and gradually move to inte
 
 The project uses several tools to enhance the testing experience:
 
-- **gotestfmt**: Provides emoji-enhanced, human-readable test output
+- **gotestsum**: Provides emoji-enhanced, human-readable test output
 - **golangci-lint**: Code linting and static analysis
 - **goreleaser**: Release automation and snapshot builds
 - **air**: Hot reload for development (optional)

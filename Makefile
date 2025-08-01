@@ -37,9 +37,9 @@ deps:
 		echo "Installing goreleaser..."; \
 		go install github.com/goreleaser/goreleaser@latest; \
 	fi
-	@if ! command -v gotestfmt >/dev/null 2>&1; then \
-		echo "Installing gotestfmt..."; \
-		go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest; \
+	@if ! command -v gotestsum >/dev/null 2>&1; then \
+		echo "Installing gotestsum..."; \
+		go install gotest.tools/gotestsum@latest; \
 	fi
 	@if ! command -v air >/dev/null 2>&1; then \
 		echo "Installing air for hot reload..."; \
@@ -63,10 +63,10 @@ lint:
 test-unit:
 	@echo "Running unit tests..."
 	@mkdir -p ./tmp
-	@if command -v gotestfmt >/dev/null 2>&1; then \
-		WNC_CONTROLLERS="" go test -json -race ./... | gotestfmt; \
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		WNC_CONTROLLERS="" gotestsum --format testname -- -race ./...; \
 	else \
-		echo "gotestfmt not found, running go test with verbose output..."; \
+		echo "gotestsum not found, running go test with verbose output..."; \
 		WNC_CONTROLLERS="" go test -v -race ./...; \
 	fi
 
@@ -79,10 +79,10 @@ test-integration:
 		echo "Set WNC_CONTROLLERS to run integration tests"; \
 	fi
 	@mkdir -p ./tmp
-	@if command -v gotestfmt >/dev/null 2>&1; then \
-		go test -json -race -run "TestIntegration" ./internal/cli/... | gotestfmt; \
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		gotestsum --format testname -- -race -run "TestIntegration" ./internal/cli/...; \
 	else \
-		echo "gotestfmt not found, running go test with verbose output..."; \
+		echo "gotestsum not found, running go test with verbose output..."; \
 		go test -v -race -run "TestIntegration" ./internal/cli/...; \
 	fi
 
@@ -91,10 +91,10 @@ test-integration:
 test-coverage:
 	@echo "Running tests with coverage..."
 	@mkdir -p ./tmp
-	@if command -v gotestfmt >/dev/null 2>&1; then \
-		WNC_CONTROLLERS="" go test -json -race -coverprofile=./tmp/coverage.out ./... | gotestfmt; \
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		WNC_CONTROLLERS="" gotestsum --format testname -- -race -coverprofile=./tmp/coverage.out ./...; \
 	else \
-		echo "gotestfmt not found, running go test with verbose output..."; \
+		echo "gotestsum not found, running go test with verbose output..."; \
 		WNC_CONTROLLERS="" go test -v -race -coverprofile=./tmp/coverage.out ./...; \
 	fi
 	@if [ -f ./tmp/coverage.out ]; then \
