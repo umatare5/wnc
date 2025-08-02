@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestRfTypeAliases(t *testing.T) {
@@ -148,7 +150,7 @@ func TestRfIntegration(t *testing.T) {
 
 func TestGetRfTags_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC RF tags response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(`{
@@ -170,7 +172,7 @@ func TestGetRfTags_WithRealResponse(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -190,7 +192,7 @@ func TestGetRfTags_WithRealResponse(t *testing.T) {
 
 func TestGetRfTags_WithErrorHandling(t *testing.T) {
 	// Create a test server that returns 500 error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte(`{"error": "Internal Server Error"}`))
 		if err != nil {
@@ -200,7 +202,7 @@ func TestGetRfTags_WithErrorHandling(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}

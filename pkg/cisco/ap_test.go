@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestApTypeAliases(t *testing.T) {
@@ -284,7 +286,7 @@ func TestApIntegration(t *testing.T) {
 
 func TestGetApOper_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC AP API response structure
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mock response based on real WNC AP API structure
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
@@ -308,8 +310,10 @@ func TestGetApOper_WithRealResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	// Create client with test server URL (extract host from URL)
+	serverHost := strings.TrimPrefix(server.URL, "https://")
+	t.Logf("Server URL: %s, Host: %s", server.URL, serverHost)
+	client, err := NewClientWithTimeout(serverHost, "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -329,7 +333,7 @@ func TestGetApOper_WithRealResponse(t *testing.T) {
 
 func TestGetApCapwapData_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC CAPWAP data response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(`{
@@ -349,8 +353,9 @@ func TestGetApCapwapData_WithRealResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	// Create client with test server URL (extract host from URL)
+	serverHost := strings.TrimPrefix(server.URL, "https://")
+	client, err := NewClientWithTimeout(serverHost, "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -370,7 +375,7 @@ func TestGetApCapwapData_WithRealResponse(t *testing.T) {
 
 func TestGetApLldpNeigh_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC LLDP neighbor response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(`{
@@ -386,8 +391,9 @@ func TestGetApLldpNeigh_WithRealResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	// Create client with test server URL (extract host from URL)
+	serverHost := strings.TrimPrefix(server.URL, "https://")
+	client, err := NewClientWithTimeout(serverHost, "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -407,7 +413,7 @@ func TestGetApLldpNeigh_WithRealResponse(t *testing.T) {
 
 func TestGetApRadioOperData_WithErrorResponse(t *testing.T) {
 	// Create a test server that returns error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte(`{"error": "Internal Server Error"}`))
 		if err != nil {
@@ -416,8 +422,9 @@ func TestGetApRadioOperData_WithErrorResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	// Create client with test server URL (extract host from URL)
+	serverHost := strings.TrimPrefix(server.URL, "https://")
+	client, err := NewClientWithTimeout(serverHost, "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -433,32 +440,42 @@ func TestGetApRadioOperData_WithErrorResponse(t *testing.T) {
 	}
 }
 
-func TestGetApOperData_WithTimeout(t *testing.T) {
-	// Create a test server that delays response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Simulate network delay
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(`{"cisco-wireless-access-point-oper:ap-oper-data": {}}`))
-		if err != nil {
-			t.Errorf("Failed to write response: %v", err)
-		}
-	}))
-	defer server.Close()
-
-	// Create client with very short timeout to test timeout handling
-	client, err := NewClientWithTimeout(server.URL, "test-token", 1, boolPtr(false))
-	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
+func TestGetApOperData_TimeoutValidation(t *testing.T) {
+	// Test timeout validation without making HTTP calls
+	// This tests the timeout configuration validation
+	tests := []struct {
+		name        string
+		timeout     time.Duration
+		expectError bool
+	}{
+		{
+			name:        "valid timeout",
+			timeout:     30 * time.Second,
+			expectError: false,
+		},
+		{
+			name:        "zero timeout",
+			timeout:     0,
+			expectError: true,
+		},
+		{
+			name:        "negative timeout",
+			timeout:     -1 * time.Second,
+			expectError: true,
+		},
 	}
 
-	// Test GetApOperData function
-	result, err := GetApOperData(client, context.Background())
-	// This may or may not timeout depending on test execution speed
-	// So we just check that the function exists and can be called
-	if result != nil {
-		t.Logf("GetApOperData returned result successfully")
-	} else if err != nil {
-		t.Logf("GetApOperData returned error as expected: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewClientWithTimeout("https://test.example.com", "test-token", tt.timeout, boolPtr(false))
+
+			if tt.expectError && err == nil {
+				t.Errorf("Expected error for timeout %v, but got none", tt.timeout)
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("Unexpected error for timeout %v: %v", tt.timeout, err)
+			}
+		})
 	}
 }
 
