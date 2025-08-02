@@ -1,6 +1,6 @@
 # Makefile for wnc CLI application
 
-.PHONY: help clean deps lint test-unit test-integration test-coverage test-coverage-html build build-snapshot run install
+.PHONY: help clean deps lint test-unit test-integration test-mock test-coverage test-coverage-html generate-mocks build build-snapshot run install
 
 # Default target
 help:
@@ -11,8 +11,10 @@ help:
 	@echo "  lint             - Run linting tools"
 	@echo "  test-unit        - Run unit tests only"
 	@echo "  test-integration - Run integration tests (requires environment variables)"
+	@echo "  test-mock        - Run GoMock-based tests"
 	@echo "  test-coverage    - Run tests with coverage analysis"
 	@echo "  test-coverage-html - Generate HTML coverage report"
+	@echo "  generate-mocks   - Generate mock implementations using GoMock"
 	@echo "  build            - Build the CLI application"
 	@echo "  build-snapshot   - Build snapshot release with goreleaser"
 	@echo "  run              - Run the CLI application"
@@ -44,6 +46,10 @@ deps:
 	@if ! command -v air >/dev/null 2>&1; then \
 		echo "Installing air for hot reload..."; \
 		go install github.com/air-verse/air@latest; \
+	fi
+	@if ! command -v mockgen >/dev/null 2>&1; then \
+		echo "Installing GoMock..."; \
+		go install github.com/golang/mock/mockgen@latest; \
 	fi
 	@echo "Development dependencies installed!"
 
@@ -85,6 +91,29 @@ test-integration:
 		echo "gotestsum not found, running go test with verbose output..."; \
 		go test -v -race -run "TestIntegration" ./internal/cli/...; \
 	fi
+
+# Run GoMock-based tests
+.PHONY: test-mock
+test-mock:
+	@echo "Running GoMock-based tests..."
+	@mkdir -p ./tmp
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		gotestsum --format testname -- -race ./test/mock/...; \
+	else \
+		echo "gotestsum not found, running go test with verbose output..."; \
+		go test -v -race ./test/mock/...; \
+	fi
+
+# Generate mock implementations using GoMock
+.PHONY: generate-mocks
+generate-mocks:
+	@echo "Generating mock implementations..."
+	@if ! command -v mockgen >/dev/null 2>&1; then \
+		echo "mockgen not found. Install it with 'make deps' first"; \
+		exit 1; \
+	fi
+	@cd pkg/cisco && go generate
+	@echo "Mock generation completed!"
 
 # Run tests with coverage
 .PHONY: test-coverage

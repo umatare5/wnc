@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	github.com/dustin/go-humanize v1.0.1
+	github.com/golang/mock v1.6.0
 	github.com/jinzhu/configor v1.2.2
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/sirupsen/logrus v1.9.3
