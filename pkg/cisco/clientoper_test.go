@@ -79,11 +79,17 @@ func TestClientOperFunctions(t *testing.T) {
 
 			result, err := tt.testFunc(nil, ctx)
 
-			// This code should not be reached due to panic, but include for completeness
+			// We expect either an error (due to nil client) or a nil result
+			// This tests that the function can be called and handles edge cases
 			if err == nil && result == nil {
 				// This is acceptable - function handled nil client gracefully
+				t.Logf("Function %s handled nil client gracefully", tt.name)
 			} else if err != nil {
 				// This is also acceptable - function properly returned an error for nil client
+				t.Logf("Function %s properly returned error for nil client: %v", tt.name, err)
+			} else {
+				// Unexpected: got a result with nil client
+				t.Logf("Function %s returned result with nil client (unexpected but not necessarily wrong): %v", tt.name, result)
 			}
 		})
 	}
@@ -91,7 +97,7 @@ func TestClientOperFunctions(t *testing.T) {
 
 // TestClientOperFunctionsWithContext tests functions with different context values
 func TestClientOperFunctionsWithContext(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "test", "value")
+	ctx := context.WithValue(context.Background(), testContextKey("test"), "value")
 
 	// Test that functions can be called with a context containing values
 	functions := []func(*Client, context.Context) (interface{}, error){
