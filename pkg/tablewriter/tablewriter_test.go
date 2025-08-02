@@ -2,6 +2,7 @@ package tablewriter
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -59,4 +60,33 @@ func TestNewTableCreation(t *testing.T) {
 	if table == nil {
 		t.Error("NewTable should return non-nil table")
 	}
+}
+
+// TestNewTableOrig tests the NewTableOrig function
+func TestNewTableOrig(t *testing.T) {
+	t.Run("test_new_table_orig_function", func(t *testing.T) {
+		// Test that NewTableOrig creates a table writer
+		table := NewTableOrig(os.Stdout)
+
+		if table == nil {
+			t.Error("NewTableOrig should return non-nil table")
+		}
+	})
+
+	t.Run("test_new_table_orig_with_different_output", func(t *testing.T) {
+		// Create a temporary file for testing
+		tmpFile, err := os.CreateTemp("", "test_table_*.txt")
+		if err != nil {
+			t.Fatalf("Failed to create temp file: %v", err)
+		}
+		defer os.Remove(tmpFile.Name())
+		defer tmpFile.Close()
+
+		// Test NewTableOrig with file output
+		table := NewTableOrig(tmpFile)
+
+		if table == nil {
+			t.Error("NewTableOrig should return non-nil table")
+		}
+	})
 }
