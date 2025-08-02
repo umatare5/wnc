@@ -1,6 +1,6 @@
 # Makefile for wnc CLI application
 
-.PHONY: help clean deps lint test-unit test-integration test-mock test-coverage test-coverage-html generate-mocks build build-snapshot run install
+.PHONY: help clean deps lint test-unit test-integration test-mock test-coverage test-coverage-filtered test-coverage-html generate-mocks build build-snapshot run install
 
 # Default target
 help:
@@ -13,6 +13,7 @@ help:
 	@echo "  test-integration - Run integration tests (requires environment variables)"
 	@echo "  test-mock        - Run GoMock-based tests"
 	@echo "  test-coverage    - Run tests with coverage analysis"
+	@echo "  test-coverage-filtered - Run tests with coverage analysis (excluding main.go, mock dirs, tests)"
 	@echo "  test-coverage-html - Generate HTML coverage report"
 	@echo "  generate-mocks   - Generate mock implementations using GoMock"
 	@echo "  build            - Build the CLI application"
@@ -127,8 +128,32 @@ test-coverage:
 		WNC_CONTROLLERS="" go test -v -race -coverprofile=./tmp/coverage.out ./...; \
 	fi
 	@if [ -f ./tmp/coverage.out ]; then \
-		echo "Coverage report generated at ./tmp/coverage.out"; \
+		echo "Filtering coverage to exclude main.go files, mock directories, and test directories..."; \
+		grep -v -E "(main\.go|/mock/|internal/tests/)" ./tmp/coverage.out > ./tmp/coverage_filtered.out; \
+		echo "Coverage report generated at ./tmp/coverage.out (full)"; \
+		echo "Filtered coverage report generated at ./tmp/coverage_filtered.out"; \
+		echo "Full coverage:"; \
 		go tool cover -func=./tmp/coverage.out | tail -1; \
+		echo "Filtered coverage (excluding main.go, mock dirs, tests):"; \
+		go tool cover -func=./tmp/coverage_filtered.out | tail -1; \
+	fi
+
+# Run tests with filtered coverage only
+.PHONY: test-coverage-filtered
+test-coverage-filtered:
+	@echo "Running tests with filtered coverage (excluding main.go, mock dirs, tests)..."
+	@mkdir -p ./tmp
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		WNC_CONTROLLERS="" gotestsum --format testname -- -race -coverprofile=./tmp/coverage.out ./...; \
+	else \
+		echo "gotestsum not found, running go test with verbose output..."; \
+		WNC_CONTROLLERS="" go test -v -race -coverprofile=./tmp/coverage.out ./...; \
+	fi
+	@if [ -f ./tmp/coverage.out ]; then \
+		echo "Filtering coverage to exclude main.go files, mock directories, and test directories..."; \
+		grep -v -E "(main\.go|/mock/|internal/tests/)" ./tmp/coverage.out > ./tmp/coverage_filtered.out; \
+		echo "Filtered coverage (excluding main.go, mock dirs, tests):"; \
+		go tool cover -func=./tmp/coverage_filtered.out | tail -1; \
 	fi
 
 # Generate HTML coverage report
@@ -136,9 +161,16 @@ test-coverage:
 test-coverage-html: test-coverage
 	@echo "Generating HTML coverage report..."
 	@mkdir -p ./tmp
-	@if [ -f ./tmp/coverage.out ]; then \
+	@if [ -f ./tmp/coverage_filtered.out ]; then \
+		go tool cover -html=./tmp/coverage_filtered.out -o ./tmp/coverage_filtered.html; \
+		echo "HTML coverage report (filtered) generated at ./tmp/coverage_filtered.html"; \
+		if command -v open >/dev/null 2>&1; then \
+			echo "Opening filtered coverage report in browser..."; \
+			open ./tmp/coverage_filtered.html; \
+		fi; \
+	elif [ -f ./tmp/coverage.out ]; then \
 		go tool cover -html=./tmp/coverage.out -o ./tmp/coverage.html; \
-		echo "HTML coverage report generated at ./tmp/coverage.html"; \
+		echo "HTML coverage report (full) generated at ./tmp/coverage.html"; \
 		if command -v open >/dev/null 2>&1; then \
 			echo "Opening coverage report in browser..."; \
 			open ./tmp/coverage.html; \
