@@ -1,12 +1,12 @@
 package show
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/umatare5/wnc/internal/config"
 )
 
+// TestHasNoData tests the hasNoData helper function
 func TestHasNoData(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -14,23 +14,28 @@ func TestHasNoData(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "empty slice",
+			name:     "empty_slice",
 			data:     []any{},
 			expected: true,
 		},
 		{
-			name:     "nil slice",
+			name:     "nil_slice",
 			data:     nil,
 			expected: true,
 		},
 		{
-			name:     "single item",
-			data:     []any{"item"},
+			name:     "single_element",
+			data:     []any{"test"},
 			expected: false,
 		},
 		{
-			name:     "multiple items",
-			data:     []any{"item1", "item2", "item3"},
+			name:     "multiple_elements",
+			data:     []any{"test1", "test2", "test3"},
+			expected: false,
+		},
+		{
+			name:     "mixed_types",
+			data:     []any{"string", 123, true},
 			expected: false,
 		},
 	}
@@ -39,12 +44,13 @@ func TestHasNoData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := hasNoData(tt.data)
 			if result != tt.expected {
-				t.Errorf("hasNoData(%v) = %v, expected %v", tt.data, result, tt.expected)
+				t.Errorf("hasNoData() = %v, expected %v", result, tt.expected)
 			}
 		})
 	}
 }
 
+// TestIsJSONFormat tests the isJSONFormat helper function
 func TestIsJSONFormat(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -52,28 +58,33 @@ func TestIsJSONFormat(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "json format",
+			name:     "json_format",
 			format:   config.PrintFormatJSON,
 			expected: true,
 		},
 		{
-			name:     "table format",
+			name:     "table_format",
 			format:   config.PrintFormatTable,
 			expected: false,
 		},
 		{
-			name:     "empty format",
+			name:     "empty_format",
 			format:   "",
 			expected: false,
 		},
 		{
-			name:     "unknown format",
-			format:   "unknown",
+			name:     "invalid_format",
+			format:   "invalid",
 			expected: false,
 		},
 		{
-			name:     "case sensitive test",
+			name:     "case_sensitive_json",
 			format:   "JSON",
+			expected: false,
+		},
+		{
+			name:     "partial_match",
+			format:   "json_extended",
 			expected: false,
 		},
 	}
@@ -88,6 +99,7 @@ func TestIsJSONFormat(t *testing.T) {
 	}
 }
 
+// TestIsAPMisconfigured tests the isAPMisconfigured helper function
 func TestIsAPMisconfigured(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -95,12 +107,12 @@ func TestIsAPMisconfigured(t *testing.T) {
 		expected        bool
 	}{
 		{
-			name:            "misconfigured true",
+			name:            "ap_misconfigured_true",
 			isMisconfigured: true,
 			expected:        true,
 		},
 		{
-			name:            "misconfigured false",
+			name:            "ap_misconfigured_false",
 			isMisconfigured: false,
 			expected:        false,
 		},
@@ -116,149 +128,82 @@ func TestIsAPMisconfigured(t *testing.T) {
 	}
 }
 
-func TestUtilsJSONSerialization(t *testing.T) {
+// TestUtilityFunctionsIntegration tests the utility functions working together
+func TestUtilityFunctionsIntegration(t *testing.T) {
 	tests := []struct {
 		name string
-		data interface{}
 	}{
 		{
-			name: "function results",
-			data: map[string]interface{}{
-				"hasNoData":         hasNoData([]any{}),
-				"isJSONFormat":      isJSONFormat(config.PrintFormatJSON),
-				"isAPMisconfigured": isAPMisconfigured(true),
-			},
+			name: "utility_functions_integration",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.data)
-			if err != nil {
-				t.Errorf("Failed to marshal data: %v", err)
+			// Test empty data with JSON format
+			emptyData := []any{}
+			if !hasNoData(emptyData) {
+				t.Error("Expected hasNoData to return true for empty slice")
 			}
 
-			var unmarshaled map[string]interface{}
-			err = json.Unmarshal(data, &unmarshaled)
-			if err != nil {
-				t.Errorf("Failed to unmarshal data: %v", err)
+			// Test JSON format detection
+			if !isJSONFormat(config.PrintFormatJSON) {
+				t.Error("Expected isJSONFormat to return true for JSON format")
+			}
+
+			// Test AP misconfiguration detection
+			if !isAPMisconfigured(true) {
+				t.Error("Expected isAPMisconfigured to return true for misconfigured AP")
+			}
+
+			// Test combination scenarios
+			nonEmptyData := []any{"test"}
+			if hasNoData(nonEmptyData) {
+				t.Error("Expected hasNoData to return false for non-empty slice")
+			}
+
+			if isJSONFormat(config.PrintFormatTable) {
+				t.Error("Expected isJSONFormat to return false for table format")
+			}
+
+			if isAPMisconfigured(false) {
+				t.Error("Expected isAPMisconfigured to return false for properly configured AP")
 			}
 		})
 	}
 }
 
-func TestUtilsFailFast(t *testing.T) {
+// TestUtilityFunctionEdgeCases tests edge cases for utility functions
+func TestUtilityFunctionEdgeCases(t *testing.T) {
 	tests := []struct {
 		name string
 		test func(t *testing.T)
 	}{
 		{
-			name: "hasNoData should not panic",
+			name: "hasNoData_with_nil_elements",
 			test: func(t *testing.T) {
-				defer func() {
-					if r := recover(); r != nil {
-						t.Errorf("hasNoData panicked: %v", r)
-					}
-				}()
-				_ = hasNoData(nil)
-				_ = hasNoData([]any{})
-				_ = hasNoData([]any{"item"})
+				data := []any{nil, nil}
+				if hasNoData(data) {
+					t.Error("Expected hasNoData to return false for slice with nil elements")
+				}
 			},
 		},
 		{
-			name: "isJSONFormat should not panic",
+			name: "isJSONFormat_with_whitespace",
 			test: func(t *testing.T) {
-				defer func() {
-					if r := recover(); r != nil {
-						t.Errorf("isJSONFormat panicked: %v", r)
+				formats := []string{" json", "json ", " json ", "\tjson\n"}
+				for _, format := range formats {
+					if isJSONFormat(format) {
+						t.Errorf("Expected isJSONFormat to return false for format with whitespace: %q", format)
 					}
-				}()
-				_ = isJSONFormat("")
-				_ = isJSONFormat(config.PrintFormatJSON)
-				_ = isJSONFormat("invalid")
+				}
 			},
-		},
-		{
-			name: "isAPMisconfigured should not panic",
-			test: func(t *testing.T) {
-				defer func() {
-					if r := recover(); r != nil {
-						t.Errorf("isAPMisconfigured panicked: %v", r)
-					}
-				}()
-				_ = isAPMisconfigured(true)
-				_ = isAPMisconfigured(false)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.test)
-	}
-}
-
-func TestUtilsTableDriven(t *testing.T) {
-	// Test multiple combinations of utility functions
-	tests := []struct {
-		name            string
-		dataLen         int
-		format          string
-		misconfigured   bool
-		expectEmpty     bool
-		expectJSON      bool
-		expectMisconfig bool
-	}{
-		{
-			name:            "empty data, json format, misconfigured",
-			dataLen:         0,
-			format:          config.PrintFormatJSON,
-			misconfigured:   true,
-			expectEmpty:     true,
-			expectJSON:      true,
-			expectMisconfig: true,
-		},
-		{
-			name:            "with data, table format, not misconfigured",
-			dataLen:         3,
-			format:          config.PrintFormatTable,
-			misconfigured:   false,
-			expectEmpty:     false,
-			expectJSON:      false,
-			expectMisconfig: false,
-		},
-		{
-			name:            "with data, json format, not misconfigured",
-			dataLen:         1,
-			format:          config.PrintFormatJSON,
-			misconfigured:   false,
-			expectEmpty:     false,
-			expectJSON:      true,
-			expectMisconfig: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create test data based on length
-			var data []any
-			for i := 0; i < tt.dataLen; i++ {
-				data = append(data, "item")
-			}
-
-			// Test all utility functions
-			isEmpty := hasNoData(data)
-			isJSON := isJSONFormat(tt.format)
-			isMisconfig := isAPMisconfigured(tt.misconfigured)
-
-			if isEmpty != tt.expectEmpty {
-				t.Errorf("hasNoData = %v, expected %v", isEmpty, tt.expectEmpty)
-			}
-			if isJSON != tt.expectJSON {
-				t.Errorf("isJSONFormat = %v, expected %v", isJSON, tt.expectJSON)
-			}
-			if isMisconfig != tt.expectMisconfig {
-				t.Errorf("isAPMisconfigured = %v, expected %v", isMisconfig, tt.expectMisconfig)
-			}
+			tt.test(t)
 		})
 	}
 }

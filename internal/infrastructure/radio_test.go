@@ -1,218 +1,180 @@
 package infrastructure
 
 import (
-	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/umatare5/wnc/internal/config"
 )
 
-func TestRadioRepositoryCreation(t *testing.T) {
-	tests := []struct {
-		name   string
-		config *config.Config
-	}{
-		{
-			name:   "creates RadioRepository with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-		},
-		{
-			name:   "creates RadioRepository with nil config",
-			config: nil,
-		},
-		{
-			name:   "creates RadioRepository with populated config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 10}},
+// TestRadioRepository tests the RadioRepository structure
+func TestRadioRepository(t *testing.T) {
+	cfg := &config.Config{
+		ShowCmdConfig: config.ShowCmdConfig{
+			Timeout: 30,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := &RadioRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
-			}
-		})
+	repo := &RadioRepository{
+		Config: cfg,
+	}
+
+	// Test that repository is properly initialized
+	if repo.Config == nil {
+		t.Error("Expected config to be set")
+	}
+
+	if repo.Config.ShowCmdConfig.Timeout != 30 {
+		t.Errorf("Expected timeout to be 30, got %d", repo.Config.ShowCmdConfig.Timeout)
 	}
 }
 
-func TestRadioRepositoryJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name string
-		repo *RadioRepository
-	}{
-		{
-			name: "empty RadioRepository",
-			repo: &RadioRepository{},
-		},
-		{
-			name: "RadioRepository with config",
-			repo: &RadioRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.repo)
-			if err != nil {
-				t.Errorf("Failed to marshal RadioRepository: %v", err)
-			}
-
-			var unmarshaled RadioRepository
-			err = json.Unmarshal(data, &unmarshaled)
-			if err != nil {
-				t.Errorf("Failed to unmarshal RadioRepository: %v", err)
-			}
-		})
-	}
-}
-
-func TestRadioRepositoryFailFast(t *testing.T) {
+// TestRadioRepository_GetRadioCfg tests the GetRadioCfg method
+func TestRadioRepository_GetRadioCfg(t *testing.T) {
 	tests := []struct {
 		name       string
 		config     *config.Config
-		controller string
-		apikey     string
-	}{
-		{
-			name:       "nil config should not panic",
-			config:     nil,
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "valid config should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty controller should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty apikey should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Errorf("RadioRepository operation panicked: %v", r)
-				}
-			}()
-
-			repo := &RadioRepository{Config: tt.config}
-			if repo.Config != nil {
-				isSecure := true
-				_ = repo.GetRadioCfg(tt.controller, tt.apikey, &isSecure)
-			}
-		})
-	}
-}
-
-func TestRadioRepositoryTableDriven(t *testing.T) {
-	tests := []struct {
-		name       string
 		controller string
 		apikey     string
 		isSecure   *bool
 		expectNil  bool
 	}{
 		{
-			name:       "invalid controller returns nil",
-			controller: "invalid.example.com",
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1, // Use short timeout to avoid network delays
+				},
+			},
+			controller: "192.168.1.1:443",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
-			expectNil:  true,
+			expectNil:  true, // Will be nil due to no real connection
 		},
 		{
-			name:       "empty controller returns nil",
+			name: "invalid_controller",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
 			controller: "",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
 			expectNil:  true,
 		},
 		{
-			name:       "empty apikey returns nil",
-			controller: "test.example.com",
-			apikey:     "",
-			isSecure:   &[]bool{true}[0],
-			expectNil:  true,
-		},
-		{
-			name:       "nil isSecure with valid inputs returns nil",
-			controller: "test.example.com",
+			name: "insecure_connection",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:8080",
 			apikey:     "test-token",
-			isSecure:   nil,
+			isSecure:   &[]bool{false}[0],
 			expectNil:  true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RadioRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
+			repo := &RadioRepository{
+				Config: tt.config,
+			}
+
 			result := repo.GetRadioCfg(tt.controller, tt.apikey, tt.isSecure)
 
 			if tt.expectNil && result != nil {
-				t.Errorf("Expected nil result for %s, got %v", tt.name, result)
+				t.Errorf("Expected nil result, got %v", result)
 			}
 		})
 	}
 }
 
-func TestRadioRepositoryDependencyInjection(t *testing.T) {
+// TestRadioRepository_GetRadioCfgTimeout tests timeout configuration
+func TestRadioRepository_GetRadioCfgTimeout(t *testing.T) {
+	tests := []struct {
+		name             string
+		timeoutSeconds   int
+		expectedDuration time.Duration
+	}{
+		{
+			name:             "default_timeout",
+			timeoutSeconds:   30,
+			expectedDuration: 30 * time.Second,
+		},
+		{
+			name:             "long_timeout",
+			timeoutSeconds:   120,
+			expectedDuration: 120 * time.Second,
+		},
+		{
+			name:             "short_timeout",
+			timeoutSeconds:   5,
+			expectedDuration: 5 * time.Second,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: tt.timeoutSeconds,
+				},
+			}
+
+			repo := &RadioRepository{
+				Config: cfg,
+			}
+
+			// Test that the timeout is properly configured
+			actualDuration := time.Duration(repo.Config.ShowCmdConfig.Timeout) * time.Second
+			if actualDuration != tt.expectedDuration {
+				t.Errorf("Expected timeout %v, got %v", tt.expectedDuration, actualDuration)
+			}
+		})
+	}
+}
+
+// TestRadioRepository_ErrorHandling tests error handling scenarios
+func TestRadioRepository_ErrorHandling(t *testing.T) {
 	tests := []struct {
 		name   string
 		config *config.Config
 	}{
 		{
-			name:   "dependency injection with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
+			name:   "nil_config",
+			config: nil,
 		},
 		{
-			name:   "dependency injection with nil config",
-			config: nil,
+			name: "zero_timeout_config",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 0,
+				},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RadioRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
+			repo := &RadioRepository{
+				Config: tt.config,
+			}
+
+			// Test error handling for edge cases
+			defer func() {
+				if r := recover(); r != nil && tt.config == nil {
+					// Expected panic for nil config
+					t.Logf("Expected panic for nil config: %v", r)
+				}
+			}()
+
+			result := repo.GetRadioCfg("test", "test", nil)
+			if result != nil {
+				t.Error("Expected nil result for invalid configuration")
 			}
 		})
-	}
-}
-
-func TestRadioRepositoryResponseTypeValidation(t *testing.T) {
-	t.Run("GetRadioCfg returns correct type", func(t *testing.T) {
-		repo := &RadioRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
-		isSecure := true
-		result := repo.GetRadioCfg("invalid", "token", &isSecure)
-		// result should be nil due to network error, but type should be correct
-		if result != nil {
-			t.Logf("GetRadioCfg returned: %T", result)
-		}
-	})
-}
-
-func TestRadioRepositoryImmutability(t *testing.T) {
-	originalConfig := &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}
-	repo := &RadioRepository{Config: originalConfig}
-
-	isSecure := true
-	_ = repo.GetRadioCfg("test.example.com", "test-token", &isSecure)
-
-	// Config should remain unchanged
-	if repo.Config.ShowCmdConfig.Timeout != 30 {
-		t.Error("Repository config was modified during operation")
 	}
 }

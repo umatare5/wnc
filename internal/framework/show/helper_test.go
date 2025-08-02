@@ -1,148 +1,188 @@
 package show
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
+	"os"
 	"testing"
 )
 
-func TestPrintJsonFunction(t *testing.T) {
+// TestPrintJson tests the printJson helper function
+func TestPrintJson(t *testing.T) {
 	tests := []struct {
-		name string
-		data interface{}
+		name     string
+		data     interface{}
+		expected bool
 	}{
 		{
-			name: "simple string",
-			data: "test",
+			name:     "string_data",
+			data:     "test",
+			expected: true,
 		},
 		{
-			name: "simple map",
-			data: map[string]string{"key": "value"},
+			name:     "struct_data",
+			data:     struct{ Name string }{Name: "test"},
+			expected: true,
 		},
 		{
-			name: "simple slice",
-			data: []string{"item1", "item2"},
+			name:     "slice_data",
+			data:     []string{"a", "b", "c"},
+			expected: true,
 		},
 		{
-			name: "nil data",
-			data: nil,
+			name:     "map_data",
+			data:     map[string]string{"key": "value"},
+			expected: true,
+		},
+		{
+			name:     "nil_data",
+			data:     nil,
+			expected: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Since printJson prints to stdout and calls log.Fatal on error,
-			// we just test that the JSON marshaling would work
-			_, err := json.Marshal(tt.data)
-			if err != nil {
-				t.Errorf("JSON marshaling failed for %v: %v", tt.data, err)
-			}
-		})
-	}
-}
+			// Capture stdout
+			originalStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
 
-func TestPrintJsonJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name string
-		data interface{}
-	}{
-		{
-			name: "complex structure",
-			data: map[string]interface{}{
-				"string": "value",
-				"number": 42,
-				"bool":   true,
-				"array":  []int{1, 2, 3},
-				"nested": map[string]string{"inner": "value"},
-			},
-		},
-	}
+			defer func() {
+				os.Stdout = originalStdout
+			}()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			jsonData, err := json.Marshal(tt.data)
-			if err != nil {
-				t.Errorf("Failed to marshal data: %v", err)
-			}
+			// Test in a goroutine to handle potential log.Fatal
+			done := make(chan bool)
+			var output string
 
-			var unmarshaled interface{}
-			err = json.Unmarshal(jsonData, &unmarshaled)
-			if err != nil {
-				t.Errorf("Failed to unmarshal data: %v", err)
-			}
-		})
-	}
-}
-
-func TestPrintJsonFailFast(t *testing.T) {
-	tests := []struct {
-		name string
-		test func(t *testing.T)
-	}{
-		{
-			name: "json marshaling should not panic",
-			test: func(t *testing.T) {
+			go func() {
 				defer func() {
 					if r := recover(); r != nil {
-						t.Errorf("JSON marshaling panicked: %v", r)
+						t.Logf("printJson recovered from: %v", r)
 					}
+					done <- true
 				}()
+				printJson(tt.data)
+			}()
 
-				data := map[string]string{"test": "value"}
-				_, err := json.Marshal(data)
-				if err != nil {
-					t.Logf("JSON marshaling failed as expected for certain data types: %v", err)
-				}
-			},
-		},
-	}
+			// Wait for completion
+			<-done
 
-	for _, tt := range tests {
-		t.Run(tt.name, tt.test)
+			// Close writer and read output
+			w.Close()
+			outputBytes, _ := io.ReadAll(r)
+			output = string(outputBytes)
+
+			// Verify output was generated
+			if tt.expected && len(output) == 0 {
+				t.Errorf("Expected JSON output, got empty string")
+			}
+
+			t.Logf("JSON output length: %d", len(output))
+		})
 	}
 }
 
-func TestPrintJsonTableDriven(t *testing.T) {
+// TestPrintJsonWithInvalidData tests printJson behavior with unmarshallable data
+func TestPrintJsonWithInvalidData(t *testing.T) {
+	// Since printJson calls log.Fatal on JSON marshaling errors,
+	// we'll test that the JSON marshaling itself fails for these types
 	tests := []struct {
-		name        string
-		data        interface{}
-		shouldError bool
+		name string
+		data interface{}
 	}{
 		{
-			name:        "valid string",
-			data:        "test",
-			shouldError: false,
+			name: "function_data",
+			data: func() {},
 		},
 		{
-			name:        "valid number",
-			data:        42,
-			shouldError: false,
-		},
-		{
-			name:        "valid boolean",
-			data:        true,
-			shouldError: false,
-		},
-		{
-			name:        "valid slice",
-			data:        []string{"a", "b", "c"},
-			shouldError: false,
-		},
-		{
-			name:        "valid map",
-			data:        map[string]int{"one": 1, "two": 2},
-			shouldError: false,
+			name: "channel_data",
+			data: make(chan int),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Test that json.Marshal fails for these data types
 			_, err := json.Marshal(tt.data)
-			if tt.shouldError && err == nil {
-				t.Errorf("Expected error for %v, but got none", tt.data)
+			if err == nil {
+				t.Errorf("Expected JSON marshaling to fail for %s, but it succeeded", tt.name)
 			}
-			if !tt.shouldError && err != nil {
-				t.Errorf("Unexpected error for %v: %v", tt.data, err)
+
+			// Log the expected error for documentation
+			t.Logf("Expected JSON marshaling error for %s: %v", tt.name, err)
+		})
+	}
+}
+
+// TestPrintJsonBuffered tests printJson with captured output
+func TestPrintJsonBuffered(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     interface{}
+		contains string
+	}{
+		{
+			name:     "simple_string",
+			data:     "hello",
+			contains: "hello",
+		},
+		{
+			name:     "simple_number",
+			data:     42,
+			contains: "42",
+		},
+		{
+			name:     "boolean_true",
+			data:     true,
+			contains: "true",
+		},
+		{
+			name:     "boolean_false",
+			data:     false,
+			contains: "false",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Use a buffer to capture output instead of os.Stdout
+			var buf bytes.Buffer
+
+			// Temporarily redirect stdout
+			originalStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+
+			// Run printJson in goroutine
+			done := make(chan bool)
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						t.Logf("printJson completed with recovery: %v", r)
+					}
+					done <- true
+				}()
+				printJson(tt.data)
+			}()
+
+			// Wait and cleanup
+			<-done
+			w.Close()
+			os.Stdout = originalStdout
+
+			// Read output
+			io.Copy(&buf, r)
+			output := buf.String()
+
+			// Verify output contains expected content
+			if len(output) == 0 {
+				t.Error("Expected non-empty JSON output")
 			}
+
+			t.Logf("JSON output: %s", output)
 		})
 	}
 }

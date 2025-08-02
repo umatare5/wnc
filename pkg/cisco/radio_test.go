@@ -1,144 +1,132 @@
 package cisco
 
 import (
+	"context"
 	"encoding/json"
-	"reflect"
 	"testing"
 )
 
+// TestRadioTypeAliases tests that all Radio-related type aliases are properly defined
 func TestRadioTypeAliases(t *testing.T) {
 	tests := []struct {
-		name string
-		test func(t *testing.T)
+		name     string
+		testFunc func() interface{}
 	}{
 		{
-			name: "RadioCfgResponse alias exists",
-			test: func(t *testing.T) {
-				var resp *RadioCfgResponse
-				_ = resp
-				t.Log("RadioCfgResponse type alias is valid")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, tt.test)
-	}
-}
-
-func TestRadioJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name   string
-		create func() interface{}
-	}{
-		{
-			name: "RadioCfgResponse serialization",
-			create: func() interface{} {
-				return &RadioCfgResponse{}
+			name: "RadioCfgResponse type alias",
+			testFunc: func() interface{} {
+				var resp RadioCfgResponse
+				return resp
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := tt.create()
-			data, err := json.Marshal(obj)
-			if err != nil {
-				t.Errorf("Failed to marshal %T: %v", obj, err)
+			// Test that the type can be instantiated
+			result := tt.testFunc()
+			if result == nil {
+				t.Errorf("Type alias %s returned nil", tt.name)
 			}
 
-			var unmarshaled RadioCfgResponse
-			err = json.Unmarshal(data, &unmarshaled)
+			// Test that the type can be serialized to JSON (basic functionality test)
+			_, err := json.Marshal(result)
 			if err != nil {
-				t.Errorf("Failed to unmarshal %T: %v", obj, err)
+				t.Errorf("Failed to marshal %s to JSON: %v", tt.name, err)
 			}
 		})
 	}
 }
 
-func TestRadioFunctionSignatures(t *testing.T) {
+// TestGetRadioCfg tests the GetRadioCfg function
+func TestGetRadioCfg(t *testing.T) {
+	ctx := context.Background()
+
 	tests := []struct {
-		name string
-		test func(t *testing.T)
+		name        string
+		client      *Client
+		expectPanic bool
 	}{
 		{
-			name: "GetRadioCfg function signature",
-			test: func(t *testing.T) {
-				// Test that function exists and has correct signature
-				// Check the function type without calling it to avoid nil pointer dereference
-				funcType := reflect.TypeOf(GetRadioCfg)
-				if funcType == nil {
-					t.Error("GetRadioCfg function not found")
-					return
-				}
-
-				// Verify function signature: func(*Client, context.Context) (*RadioCfgResponse, error)
-				if funcType.NumIn() != 2 {
-					t.Errorf("GetRadioCfg expected 2 parameters, got %d", funcType.NumIn())
-				}
-				if funcType.NumOut() != 2 {
-					t.Errorf("GetRadioCfg expected 2 return values, got %d", funcType.NumOut())
-				}
-
-				t.Log("GetRadioCfg function signature is correct")
-			},
+			name:        "nil_client",
+			client:      nil,
+			expectPanic: true, // Should panic with nil client
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, tt.test)
-	}
-}
-
-func TestRadioFailFast(t *testing.T) {
-	tests := []struct {
-		name string
-		test func(t *testing.T)
-	}{
-		{
-			name: "RadioCfgResponse should not panic",
-			test: func(t *testing.T) {
-				defer func() {
-					if r := recover(); r != nil {
-						t.Errorf("RadioCfgResponse creation panicked: %v", r)
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					if !tt.expectPanic {
+						t.Errorf("Unexpected panic: %v", r)
+					} else {
+						t.Logf("Expected panic with nil client: %v", r)
 					}
-				}()
-				var resp *RadioCfgResponse
-				_ = resp
-			},
+				} else if tt.expectPanic {
+					t.Error("Expected panic but none occurred")
+				}
+			}()
+
+			result, err := GetRadioCfg(tt.client, ctx)
+
+			if !tt.expectPanic {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				// In test environment, result will likely be nil due to no real connection
+				if result != nil {
+					t.Logf("GetRadioCfg returned result: %v", result)
+				}
+			}
+		})
+	}
+}
+
+// TestGetRadioCfgWithContext tests GetRadioCfg with different context values
+func TestGetRadioCfgWithContext(t *testing.T) {
+	tests := []struct {
+		name string
+		ctx  context.Context
+	}{
+		{
+			name: "background_context",
+			ctx:  context.Background(),
+		},
+		{
+			name: "context_with_value",
+			ctx:  context.WithValue(context.Background(), "test", "value"),
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, tt.test)
+		t.Run(tt.name, func(t *testing.T) {
+			// Test that function accepts different context types without panicking beyond expected nil client panic
+			defer func() {
+				if r := recover(); r != nil {
+					// Expected panic due to nil client
+					t.Logf("Expected panic with nil client: %v", r)
+				}
+			}()
+
+			_, _ = GetRadioCfg(nil, tt.ctx)
+		})
 	}
 }
 
-func TestRadioIntegration(t *testing.T) {
-	t.Run("nil client should handle gracefully", func(t *testing.T) {
-		// Test that function exists and can be called with proper signature
-		// We test the function signature without actually calling it with nil
-		// to avoid segmentation faults
-		funcType := reflect.TypeOf(GetRadioCfg)
-		if funcType == nil {
-			t.Error("GetRadioCfg function not found")
-			return
-		}
+// TestRadioFunctionSignature tests that the function signature is correct
+func TestRadioFunctionSignature(t *testing.T) {
+	// Test that GetRadioCfg function exists and has correct signature
+	ctx := context.Background()
 
-		// Verify it's a function that takes 2 parameters and returns 2 values
-		if funcType.Kind() != reflect.Func {
-			t.Error("GetRadioCfg is not a function")
-			return
+	// This test validates the function can be called
+	// The actual implementation will handle nil client appropriately (with panic)
+	defer func() {
+		if r := recover(); r != nil {
+			// Expected panic due to nil client
+			t.Logf("Expected panic with nil client: %v", r)
 		}
+	}()
 
-		if funcType.NumIn() != 2 {
-			t.Errorf("GetRadioCfg expected 2 parameters, got %d", funcType.NumIn())
-		}
-
-		if funcType.NumOut() != 2 {
-			t.Errorf("GetRadioCfg expected 2 return values, got %d", funcType.NumOut())
-		}
-
-		t.Log("GetRadioCfg function signature verified successfully")
-	})
+	_, _ = GetRadioCfg(nil, ctx)
 }

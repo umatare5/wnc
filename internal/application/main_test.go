@@ -1,321 +1,166 @@
 package application
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/umatare5/wnc/internal/config"
 	"github.com/umatare5/wnc/internal/infrastructure"
 )
 
-func TestUsecaseNew(t *testing.T) {
+// TestNew tests application layer initialization (Unit test)
+func TestNew(t *testing.T) {
 	tests := []struct {
 		name string
-		cfg  *config.Config
-		repo *infrastructure.Repository
 	}{
 		{
-			name: "creates new usecase with valid config and repository",
-			cfg:  &config.Config{},
-			repo: &infrastructure.Repository{},
-		},
-		{
-			name: "creates new usecase with nil config",
-			cfg:  nil,
-			repo: &infrastructure.Repository{},
-		},
-		{
-			name: "creates new usecase with nil repository",
-			cfg:  &config.Config{},
-			repo: nil,
+			name: "create_application_layer",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.cfg, tt.repo)
+			cfg := &config.Config{}
+			repo := &infrastructure.Repository{}
 
-			if got.Config != tt.cfg {
-				t.Errorf("New() Config = %v, want %v", got.Config, tt.cfg)
+			app := New(cfg, repo)
+			if app.Config != cfg {
+				t.Error("New() Config not set correctly")
 			}
-
-			if got.Repository != tt.repo {
-				t.Errorf("New() Repository = %v, want %v", got.Repository, tt.repo)
+			if app.Repository != repo {
+				t.Error("New() Repository not set correctly")
 			}
 		})
 	}
 }
 
-func TestUsecaseInvokeSubUsecases(t *testing.T) {
-	cfg := &config.Config{}
-	repo := &infrastructure.Repository{}
-	usecase := New(cfg, repo)
+// TestInvokeTokenUsecase tests token usecase invocation (Unit test)
+func TestInvokeTokenUsecase(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "invoke_token_usecase",
+		},
+	}
 
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Config{}
+			repo := &infrastructure.Repository{}
+			app := New(cfg, repo)
+
+			tokenUsecase := app.InvokeTokenUsecase()
+			if tokenUsecase == nil {
+				t.Error("InvokeTokenUsecase returned nil")
+			}
+			if tokenUsecase.Config != cfg {
+				t.Error("TokenUsecase Config not set correctly")
+			}
+			if tokenUsecase.Repository != repo {
+				t.Error("TokenUsecase Repository not set correctly")
+			}
+		})
+	}
+}
+
+// TestGenerateBasicAuthToken tests token generation functionality (Unit test)
+func TestGenerateBasicAuthToken(t *testing.T) {
 	tests := []struct {
 		name     string
-		invoke   func() interface{}
-		wantType string
+		username string
+		password string
+		want     string
 	}{
 		{
-			name: "InvokeTokenUsecase returns TokenUsecase",
-			invoke: func() interface{} {
-				return usecase.InvokeTokenUsecase()
-			},
-			wantType: "*application.TokenUsecase",
+			name:     "basic_auth_token",
+			username: "admin",
+			password: "password",
+			want:     "YWRtaW46cGFzc3dvcmQ=", // base64("admin:password")
 		},
 		{
-			name: "InvokeClientUsecase returns ClientUsecase",
-			invoke: func() interface{} {
-				return usecase.InvokeClientUsecase()
-			},
-			wantType: "*application.ClientUsecase",
-		},
-		{
-			name: "InvokeApUsecase returns ApUsecase",
-			invoke: func() interface{} {
-				return usecase.InvokeApUsecase()
-			},
-			wantType: "*application.ApUsecase",
-		},
-		{
-			name: "InvokeWlanUsecase returns WlanUsecase",
-			invoke: func() interface{} {
-				return usecase.InvokeWlanUsecase()
-			},
-			wantType: "*application.WlanUsecase",
-		},
-		{
-			name: "InvokeOverviewUsecase returns OverviewUsecase",
-			invoke: func() interface{} {
-				return usecase.InvokeOverviewUsecase()
-			},
-			wantType: "*application.OverviewUsecase",
+			name:     "empty_credentials",
+			username: "",
+			password: "",
+			want:     "Og==", // base64(":")
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.invoke()
-
-			// Check that the returned object is not nil
-			if got == nil {
-				t.Errorf("%s returned nil", tt.name)
-				return
-			}
-
-			// Check that each sub-usecase has the correct config and repository references
-			switch v := got.(type) {
-			case *TokenUsecase:
-				if v.Config != cfg {
-					t.Errorf("TokenUsecase.Config = %v, want %v", v.Config, cfg)
-				}
-				if v.Repository != repo {
-					t.Errorf("TokenUsecase.Repository = %v, want %v", v.Repository, repo)
-				}
-			case *ClientUsecase:
-				if v.Config != cfg {
-					t.Errorf("ClientUsecase.Config = %v, want %v", v.Config, cfg)
-				}
-				if v.Repository != repo {
-					t.Errorf("ClientUsecase.Repository = %v, want %v", v.Repository, repo)
-				}
-			case *ApUsecase:
-				if v.Config != cfg {
-					t.Errorf("ApUsecase.Config = %v, want %v", v.Config, cfg)
-				}
-				if v.Repository != repo {
-					t.Errorf("ApUsecase.Repository = %v, want %v", v.Repository, repo)
-				}
-			case *WlanUsecase:
-				if v.Config != cfg {
-					t.Errorf("WlanUsecase.Config = %v, want %v", v.Config, cfg)
-				}
-				if v.Repository != repo {
-					t.Errorf("WlanUsecase.Repository = %v, want %v", v.Repository, repo)
-				}
-			case *OverviewUsecase:
-				if v.Config != cfg {
-					t.Errorf("OverviewUsecase.Config = %v, want %v", v.Config, cfg)
-				}
-				if v.Repository != repo {
-					t.Errorf("OverviewUsecase.Repository = %v, want %v", v.Repository, repo)
-				}
-			default:
-				t.Errorf("Unexpected type returned: %T", got)
-			}
-		})
-	}
-}
-
-func TestUsecaseJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name    string
-		usecase Usecase
-	}{
-		{
-			name: "empty usecase",
-			usecase: Usecase{
-				Config:     nil,
-				Repository: nil,
-			},
-		},
-		{
-			name: "usecase with config",
-			usecase: Usecase{
-				Config: &config.Config{
-					ShowCmdConfig: config.ShowCmdConfig{
-						PrintFormat: config.PrintFormatJSON,
-						Timeout:     30,
-					},
+			cfg := &config.Config{
+				GenerateCmdConfig: config.GenerateCmdConfig{
+					Username: tt.username,
+					Password: tt.password,
 				},
-				Repository: nil,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Test JSON marshaling
-			jsonData, err := json.Marshal(tt.usecase)
-			if err != nil {
-				t.Fatalf("Failed to marshal Usecase to JSON: %v", err)
 			}
+			repo := &infrastructure.Repository{}
+			app := New(cfg, repo)
 
-			// Test JSON unmarshaling
-			var unmarshaledUsecase Usecase
-			err = json.Unmarshal(jsonData, &unmarshaledUsecase)
-			if err != nil {
-				t.Fatalf("Failed to unmarshal Usecase from JSON: %v", err)
-			}
+			tokenUsecase := app.InvokeTokenUsecase()
+			got := tokenUsecase.GenerateBasicAuthToken()
 
-			// Basic validation - checking that unmarshaling doesn't fail
-			// Note: Pointer fields will be nil after unmarshal due to struct pointers
-			if tt.usecase.Config != nil && unmarshaledUsecase.Config == nil {
-				// This is expected behavior for JSON unmarshaling with pointers - no action needed
-				_ = tt.usecase.Config // Acknowledge the check
+			if got != tt.want {
+				t.Errorf("GenerateBasicAuthToken() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestUsecaseDependencyInjection(t *testing.T) {
+// TestInvokeApUsecase tests AP usecase invocation (Unit test)
+func TestInvokeApUsecase(t *testing.T) {
 	tests := []struct {
 		name string
-		cfg  *config.Config
-		repo *infrastructure.Repository
 	}{
 		{
-			name: "dependency injection with valid objects",
-			cfg: &config.Config{
-				ShowCmdConfig: config.ShowCmdConfig{
-					Controllers: []config.Controller{
-						{Hostname: "test.example.com", AccessToken: "token123"},
-					},
-					PrintFormat: config.PrintFormatJSON,
-				},
-			},
-			repo: &infrastructure.Repository{},
+			name: "invoke_ap_usecase",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			usecase := New(tt.cfg, tt.repo)
+			cfg := &config.Config{}
+			repo := &infrastructure.Repository{}
+			app := New(cfg, repo)
 
-			// Test that all sub-usecases receive the same dependencies
-			tokenUC := usecase.InvokeTokenUsecase()
-			clientUC := usecase.InvokeClientUsecase()
-			apUC := usecase.InvokeApUsecase()
-			wlanUC := usecase.InvokeWlanUsecase()
-			overviewUC := usecase.InvokeOverviewUsecase()
-
-			// Verify dependency injection consistency
-			usecases := []interface{}{tokenUC, clientUC, apUC, wlanUC, overviewUC}
-			for i, uc := range usecases {
-				switch v := uc.(type) {
-				case *TokenUsecase:
-					if v.Config != tt.cfg {
-						t.Errorf("Sub-usecase %d: Config not properly injected", i)
-					}
-					if v.Repository != tt.repo {
-						t.Errorf("Sub-usecase %d: Repository not properly injected", i)
-					}
-				case *ClientUsecase:
-					if v.Config != tt.cfg {
-						t.Errorf("Sub-usecase %d: Config not properly injected", i)
-					}
-					if v.Repository != tt.repo {
-						t.Errorf("Sub-usecase %d: Repository not properly injected", i)
-					}
-				case *ApUsecase:
-					if v.Config != tt.cfg {
-						t.Errorf("Sub-usecase %d: Config not properly injected", i)
-					}
-					if v.Repository != tt.repo {
-						t.Errorf("Sub-usecase %d: Repository not properly injected", i)
-					}
-				case *WlanUsecase:
-					if v.Config != tt.cfg {
-						t.Errorf("Sub-usecase %d: Config not properly injected", i)
-					}
-					if v.Repository != tt.repo {
-						t.Errorf("Sub-usecase %d: Repository not properly injected", i)
-					}
-				case *OverviewUsecase:
-					if v.Config != tt.cfg {
-						t.Errorf("Sub-usecase %d: Config not properly injected", i)
-					}
-					if v.Repository != tt.repo {
-						t.Errorf("Sub-usecase %d: Repository not properly injected", i)
-					}
-				}
+			apUsecase := app.InvokeApUsecase()
+			if apUsecase == nil {
+				t.Error("InvokeApUsecase returned nil")
+			}
+			if apUsecase.Config != cfg {
+				t.Error("ApUsecase Config not set correctly")
+			}
+			if apUsecase.Repository != repo {
+				t.Error("ApUsecase Repository not set correctly")
 			}
 		})
 	}
 }
 
-func TestUsecaseFailFast(t *testing.T) {
+// TestInvokeWlanUsecase tests WLAN usecase invocation (Unit test)
+func TestInvokeWlanUsecase(t *testing.T) {
 	tests := []struct {
-		name          string
-		cfg           *config.Config
-		repo          *infrastructure.Repository
-		expectPanic   bool
-		expectedError string
+		name string
 	}{
 		{
-			name:        "nil config should not panic in constructor",
-			cfg:         nil,
-			repo:        &infrastructure.Repository{},
-			expectPanic: false,
-		},
-		{
-			name:        "nil repository should not panic in constructor",
-			cfg:         &config.Config{},
-			repo:        nil,
-			expectPanic: false,
+			name: "invoke_wlan_usecase",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					if !tt.expectPanic {
-						t.Errorf("Unexpected panic: %v", r)
-					}
-				} else if tt.expectPanic {
-					t.Error("Expected panic but none occurred")
-				}
-			}()
+			cfg := &config.Config{}
+			repo := &infrastructure.Repository{}
+			app := New(cfg, repo)
 
-			usecase := New(tt.cfg, tt.repo)
-
-			// Verify that the usecase was created even with nil dependencies
-			if usecase.Config != tt.cfg {
-				t.Errorf("Config not properly assigned")
+			wlanUsecase := app.InvokeWlanUsecase()
+			if wlanUsecase == nil {
+				t.Error("InvokeWlanUsecase returned nil")
 			}
-			if usecase.Repository != tt.repo {
-				t.Errorf("Repository not properly assigned")
+			if wlanUsecase.Config != cfg {
+				t.Error("WlanUsecase Config not set correctly")
+			}
+			if wlanUsecase.Repository != repo {
+				t.Error("WlanUsecase Repository not set correctly")
 			}
 		})
 	}

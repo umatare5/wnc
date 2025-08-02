@@ -1,218 +1,191 @@
 package infrastructure
 
 import (
-	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/umatare5/wnc/internal/config"
 )
 
-func TestRfRepositoryCreation(t *testing.T) {
-	tests := []struct {
-		name   string
-		config *config.Config
-	}{
-		{
-			name:   "creates RfRepository with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-		},
-		{
-			name:   "creates RfRepository with nil config",
-			config: nil,
-		},
-		{
-			name:   "creates RfRepository with populated config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 10}},
+// TestRfRepository tests the RfRepository structure
+func TestRfRepository(t *testing.T) {
+	cfg := &config.Config{
+		ShowCmdConfig: config.ShowCmdConfig{
+			Timeout: 1, // Use short timeout for unit tests
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := &RfRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
-			}
-		})
+	repo := &RfRepository{
+		Config: cfg,
+	}
+
+	// Test that repository is properly initialized
+	if repo.Config == nil {
+		t.Error("Expected config to be set")
+	}
+
+	if repo.Config.ShowCmdConfig.Timeout != 1 {
+		t.Errorf("Expected timeout to be 1, got %d", repo.Config.ShowCmdConfig.Timeout)
 	}
 }
 
-func TestRfRepositoryJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name string
-		repo *RfRepository
-	}{
-		{
-			name: "empty RfRepository",
-			repo: &RfRepository{},
-		},
-		{
-			name: "RfRepository with config",
-			repo: &RfRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.repo)
-			if err != nil {
-				t.Errorf("Failed to marshal RfRepository: %v", err)
-			}
-
-			var unmarshaled RfRepository
-			err = json.Unmarshal(data, &unmarshaled)
-			if err != nil {
-				t.Errorf("Failed to unmarshal RfRepository: %v", err)
-			}
-		})
-	}
-}
-
-func TestRfRepositoryFailFast(t *testing.T) {
+// TestRfRepository_GetRfTags tests the GetRfTags method
+func TestRfRepository_GetRfTags(t *testing.T) {
 	tests := []struct {
 		name       string
 		config     *config.Config
-		controller string
-		apikey     string
-	}{
-		{
-			name:       "nil config should not panic",
-			config:     nil,
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "valid config should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty controller should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty apikey should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Errorf("RfRepository operation panicked: %v", r)
-				}
-			}()
-
-			repo := &RfRepository{Config: tt.config}
-			if repo.Config != nil {
-				isSecure := true
-				_ = repo.GetRfTags(tt.controller, tt.apikey, &isSecure)
-			}
-		})
-	}
-}
-
-func TestRfRepositoryTableDriven(t *testing.T) {
-	tests := []struct {
-		name       string
 		controller string
 		apikey     string
 		isSecure   *bool
 		expectNil  bool
 	}{
 		{
-			name:       "invalid controller returns nil",
-			controller: "invalid.example.com",
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
-			expectNil:  true,
+			expectNil:  true, // Will be nil due to no real connection
 		},
 		{
-			name:       "empty controller returns nil",
+			name: "invalid_controller",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
 			controller: "",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
 			expectNil:  true,
 		},
 		{
-			name:       "empty apikey returns nil",
-			controller: "test.example.com",
+			name: "empty_apikey",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
 			apikey:     "",
 			isSecure:   &[]bool{true}[0],
 			expectNil:  true,
 		},
-		{
-			name:       "nil isSecure with valid inputs returns nil",
-			controller: "test.example.com",
-			apikey:     "test-token",
-			isSecure:   nil,
-			expectNil:  true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RfRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
+			repo := &RfRepository{
+				Config: tt.config,
+			}
+
 			result := repo.GetRfTags(tt.controller, tt.apikey, tt.isSecure)
 
 			if tt.expectNil && result != nil {
-				t.Errorf("Expected nil result for %s, got %v", tt.name, result)
+				t.Errorf("Expected nil result, got %v", result)
 			}
 		})
 	}
 }
 
-func TestRfRepositoryDependencyInjection(t *testing.T) {
+// TestRfRepository_GetRfTagsTimeout tests timeout configuration
+func TestRfRepository_GetRfTagsTimeout(t *testing.T) {
 	tests := []struct {
-		name   string
-		config *config.Config
+		name             string
+		timeoutSeconds   int
+		expectedDuration time.Duration
 	}{
 		{
-			name:   "dependency injection with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
+			name:             "default_timeout",
+			timeoutSeconds:   30,
+			expectedDuration: 30 * time.Second,
 		},
 		{
-			name:   "dependency injection with nil config",
-			config: nil,
+			name:             "extended_timeout",
+			timeoutSeconds:   180,
+			expectedDuration: 180 * time.Second,
+		},
+		{
+			name:             "minimal_timeout",
+			timeoutSeconds:   1,
+			expectedDuration: 1 * time.Second,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RfRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
+			cfg := &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: tt.timeoutSeconds,
+				},
+			}
+
+			repo := &RfRepository{
+				Config: cfg,
+			}
+
+			// Test that the timeout is properly configured
+			actualDuration := time.Duration(repo.Config.ShowCmdConfig.Timeout) * time.Second
+			if actualDuration != tt.expectedDuration {
+				t.Errorf("Expected timeout %v, got %v", tt.expectedDuration, actualDuration)
 			}
 		})
 	}
 }
 
-func TestRfRepositoryResponseTypeValidation(t *testing.T) {
-	t.Run("GetRfTags returns correct type", func(t *testing.T) {
-		repo := &RfRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
-		isSecure := true
-		result := repo.GetRfTags("invalid", "token", &isSecure)
-		// result should be nil due to network error, but type should be correct
-		if result != nil {
-			t.Logf("GetRfTags returned: %T", result)
-		}
-	})
-}
+// TestRfRepository_EdgeCases tests edge cases and error scenarios
+func TestRfRepository_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name      string
+		config    *config.Config
+		setupFunc func() *RfRepository
+	}{
+		{
+			name:   "nil_config",
+			config: nil,
+			setupFunc: func() *RfRepository {
+				return &RfRepository{Config: nil}
+			},
+		},
+		{
+			name: "negative_timeout",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: -1,
+				},
+			},
+			setupFunc: func() *RfRepository {
+				return &RfRepository{
+					Config: &config.Config{
+						ShowCmdConfig: config.ShowCmdConfig{
+							Timeout: -1,
+						},
+					},
+				}
+			},
+		},
+	}
 
-func TestRfRepositoryImmutability(t *testing.T) {
-	originalConfig := &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}
-	repo := &RfRepository{Config: originalConfig}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := tt.setupFunc()
 
-	isSecure := true
-	_ = repo.GetRfTags("test.example.com", "test-token", &isSecure)
+			// Test error handling for edge cases
+			defer func() {
+				if r := recover(); r != nil && tt.config == nil {
+					// Expected panic for nil config
+					t.Logf("Expected panic for nil config: %v", r)
+				}
+			}()
 
-	// Config should remain unchanged
-	if repo.Config.ShowCmdConfig.Timeout != 30 {
-		t.Error("Repository config was modified during operation")
+			result := repo.GetRfTags("test", "test", nil)
+			if result != nil {
+				t.Error("Expected nil result for invalid configuration")
+			}
+		})
 	}
 }

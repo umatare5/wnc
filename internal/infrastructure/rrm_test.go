@@ -1,242 +1,296 @@
 package infrastructure
 
 import (
-	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/umatare5/wnc/internal/config"
 )
 
-func TestRrmRepositoryCreation(t *testing.T) {
-	tests := []struct {
-		name   string
-		config *config.Config
-	}{
-		{
-			name:   "creates RrmRepository with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-		},
-		{
-			name:   "creates RrmRepository with nil config",
-			config: nil,
-		},
-		{
-			name:   "creates RrmRepository with populated config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 10}},
+// TestRrmRepository tests the RrmRepository structure
+func TestRrmRepository(t *testing.T) {
+	cfg := &config.Config{
+		ShowCmdConfig: config.ShowCmdConfig{
+			Timeout: 1,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := &RrmRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
-			}
-		})
+	repo := &RrmRepository{
+		Config: cfg,
+	}
+
+	// Test that repository is properly initialized
+	if repo.Config == nil {
+		t.Error("Expected config to be set")
+	}
+
+	if repo.Config.ShowCmdConfig.Timeout != 1 {
+		t.Errorf("Expected timeout to be 1, got %d", repo.Config.ShowCmdConfig.Timeout)
 	}
 }
 
-func TestRrmRepositoryJSONSerialization(t *testing.T) {
-	tests := []struct {
-		name string
-		repo *RrmRepository
-	}{
-		{
-			name: "empty RrmRepository",
-			repo: &RrmRepository{},
-		},
-		{
-			name: "RrmRepository with config",
-			repo: &RrmRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.repo)
-			if err != nil {
-				t.Errorf("Failed to marshal RrmRepository: %v", err)
-			}
-
-			var unmarshaled RrmRepository
-			err = json.Unmarshal(data, &unmarshaled)
-			if err != nil {
-				t.Errorf("Failed to unmarshal RrmRepository: %v", err)
-			}
-		})
-	}
-}
-
-func TestRrmRepositoryFailFast(t *testing.T) {
+// TestRrmRepository_GetRrmOper tests the GetRrmOper method
+func TestRrmRepository_GetRrmOper(t *testing.T) {
 	tests := []struct {
 		name       string
 		config     *config.Config
-		controller string
-		apikey     string
-	}{
-		{
-			name:       "nil config should not panic",
-			config:     nil,
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "valid config should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty controller should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "",
-			apikey:     "test-token",
-		},
-		{
-			name:       "empty apikey should not panic",
-			config:     &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-			controller: "test.example.com",
-			apikey:     "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Errorf("RrmRepository operation panicked: %v", r)
-				}
-			}()
-
-			repo := &RrmRepository{Config: tt.config}
-			if repo.Config != nil {
-				isSecure := true
-				_ = repo.GetRrmOper(tt.controller, tt.apikey, &isSecure)
-			}
-		})
-	}
-}
-
-func TestRrmRepositoryTableDriven(t *testing.T) {
-	tests := []struct {
-		name       string
 		controller string
 		apikey     string
 		isSecure   *bool
 		expectNil  bool
 	}{
 		{
-			name:       "invalid controller returns nil",
-			controller: "invalid.example.com",
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
-			expectNil:  true,
+			expectNil:  true, // Will be nil due to no real connection
 		},
 		{
-			name:       "empty controller returns nil",
+			name: "invalid_controller",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
 			controller: "",
 			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
 			expectNil:  true,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &RrmRepository{
+				Config: tt.config,
+			}
+
+			result := repo.GetRrmOper(tt.controller, tt.apikey, tt.isSecure)
+
+			if tt.expectNil && result != nil {
+				t.Errorf("Expected nil result, got %v", result)
+			}
+		})
+	}
+}
+
+// TestRrmRepository_GetRrmMeasurement tests the GetRrmMeasurement method
+func TestRrmRepository_GetRrmMeasurement(t *testing.T) {
+	tests := []struct {
+		name       string
+		config     *config.Config
+		controller string
+		apikey     string
+		isSecure   *bool
+		expectNil  bool
+	}{
 		{
-			name:       "empty apikey returns nil",
-			controller: "test.example.com",
-			apikey:     "",
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
+			apikey:     "test-token",
 			isSecure:   &[]bool{true}[0],
 			expectNil:  true,
 		},
 		{
-			name:       "nil isSecure with valid inputs returns nil",
-			controller: "test.example.com",
+			name: "insecure_connection",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:8080",
 			apikey:     "test-token",
-			isSecure:   nil,
+			isSecure:   &[]bool{false}[0],
 			expectNil:  true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RrmRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
-			result := repo.GetRrmOper(tt.controller, tt.apikey, tt.isSecure)
+			repo := &RrmRepository{
+				Config: tt.config,
+			}
+
+			result := repo.GetRrmMeasurement(tt.controller, tt.apikey, tt.isSecure)
 
 			if tt.expectNil && result != nil {
-				t.Errorf("Expected nil result for %s, got %v", tt.name, result)
+				t.Errorf("Expected nil result, got %v", result)
 			}
 		})
 	}
 }
 
-func TestRrmRepositoryDependencyInjection(t *testing.T) {
+// TestRrmRepository_GetRrmGlobalOper tests the GetRrmGlobalOper method
+func TestRrmRepository_GetRrmGlobalOper(t *testing.T) {
 	tests := []struct {
-		name   string
-		config *config.Config
+		name       string
+		config     *config.Config
+		controller string
+		apikey     string
+		isSecure   *bool
+		expectNil  bool
 	}{
 		{
-			name:   "dependency injection with valid config",
-			config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}},
-		},
-		{
-			name:   "dependency injection with nil config",
-			config: nil,
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
+			apikey:     "test-token",
+			isSecure:   &[]bool{true}[0],
+			expectNil:  true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &RrmRepository{Config: tt.config}
-			if repo.Config != tt.config {
-				t.Errorf("Expected config %v, got %v", tt.config, repo.Config)
+			repo := &RrmRepository{
+				Config: tt.config,
+			}
+
+			result := repo.GetRrmGlobalOper(tt.controller, tt.apikey, tt.isSecure)
+
+			if tt.expectNil && result != nil {
+				t.Errorf("Expected nil result, got %v", result)
 			}
 		})
 	}
 }
 
-func TestRrmRepositoryMethodAvailability(t *testing.T) {
-	repo := &RrmRepository{Config: &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}}
-	isSecure := true
+// TestRrmRepository_GetRrmCfg tests the GetRrmCfg method
+func TestRrmRepository_GetRrmCfg(t *testing.T) {
+	tests := []struct {
+		name       string
+		config     *config.Config
+		controller string
+		apikey     string
+		isSecure   *bool
+		expectNil  bool
+	}{
+		{
+			name: "valid_parameters",
+			config: &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: 1,
+				},
+			},
+			controller: "192.168.1.1:443",
+			apikey:     "test-token",
+			isSecure:   &[]bool{true}[0],
+			expectNil:  true,
+		},
+	}
 
-	t.Run("GetRrmOper method exists", func(t *testing.T) {
-		result := repo.GetRrmOper("invalid", "token", &isSecure)
-		if result != nil {
-			t.Logf("GetRrmOper returned: %T", result)
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &RrmRepository{
+				Config: tt.config,
+			}
 
-	t.Run("GetRrmMeasurement method exists", func(t *testing.T) {
-		result := repo.GetRrmMeasurement("invalid", "token", &isSecure)
-		if result != nil {
-			t.Logf("GetRrmMeasurement returned: %T", result)
-		}
-	})
+			result := repo.GetRrmCfg(tt.controller, tt.apikey, tt.isSecure)
 
-	t.Run("GetRrmGlobalOper method exists", func(t *testing.T) {
-		result := repo.GetRrmGlobalOper("invalid", "token", &isSecure)
-		if result != nil {
-			t.Logf("GetRrmGlobalOper returned: %T", result)
-		}
-	})
-
-	t.Run("GetRrmCfg method exists", func(t *testing.T) {
-		result := repo.GetRrmCfg("invalid", "token", &isSecure)
-		if result != nil {
-			t.Logf("GetRrmCfg returned: %T", result)
-		}
-	})
+			if tt.expectNil && result != nil {
+				t.Errorf("Expected nil result, got %v", result)
+			}
+		})
+	}
 }
 
-func TestRrmRepositoryImmutability(t *testing.T) {
-	originalConfig := &config.Config{ShowCmdConfig: config.ShowCmdConfig{Timeout: 30}}
-	repo := &RrmRepository{Config: originalConfig}
+// TestRrmRepository_AllMethods tests all RRM methods together
+func TestRrmRepository_AllMethods(t *testing.T) {
+	cfg := &config.Config{
+		ShowCmdConfig: config.ShowCmdConfig{
+			Timeout: 1,
+		},
+	}
 
-	isSecure := true
-	_ = repo.GetRrmOper("test.example.com", "test-token", &isSecure)
-	_ = repo.GetRrmMeasurement("test.example.com", "test-token", &isSecure)
-	_ = repo.GetRrmGlobalOper("test.example.com", "test-token", &isSecure)
-	_ = repo.GetRrmCfg("test.example.com", "test-token", &isSecure)
+	repo := &RrmRepository{
+		Config: cfg,
+	}
 
-	// Config should remain unchanged
-	if repo.Config.ShowCmdConfig.Timeout != 30 {
-		t.Error("Repository config was modified during operation")
+	controller := "192.168.1.1:443"
+	apikey := "test-token"
+	isSecure := &[]bool{true}[0]
+
+	// Test all methods don't panic
+	methods := []func() interface{}{
+		func() interface{} { return repo.GetRrmOper(controller, apikey, isSecure) },
+		func() interface{} { return repo.GetRrmMeasurement(controller, apikey, isSecure) },
+		func() interface{} { return repo.GetRrmGlobalOper(controller, apikey, isSecure) },
+		func() interface{} { return repo.GetRrmCfg(controller, apikey, isSecure) },
+	}
+
+	for i, method := range methods {
+		t.Run(t.Name()+"_method_"+string(rune('0'+i)), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("Method panicked: %v", r)
+				}
+			}()
+
+			result := method()
+			// All methods should return nil in test environment
+			if result != nil {
+				t.Logf("Method returned non-nil result: %v", result)
+			}
+		})
+	}
+}
+
+// TestRrmRepository_TimeoutConfiguration tests timeout handling
+func TestRrmRepository_TimeoutConfiguration(t *testing.T) {
+	tests := []struct {
+		name             string
+		timeoutSeconds   int
+		expectedDuration time.Duration
+	}{
+		{
+			name:             "default_timeout",
+			timeoutSeconds:   30,
+			expectedDuration: 30 * time.Second,
+		},
+		{
+			name:             "long_timeout",
+			timeoutSeconds:   300,
+			expectedDuration: 300 * time.Second,
+		},
+		{
+			name:             "short_timeout",
+			timeoutSeconds:   10,
+			expectedDuration: 10 * time.Second,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Config{
+				ShowCmdConfig: config.ShowCmdConfig{
+					Timeout: tt.timeoutSeconds,
+				},
+			}
+
+			repo := &RrmRepository{
+				Config: cfg,
+			}
+
+			// Test that the timeout is properly configured
+			actualDuration := time.Duration(repo.Config.ShowCmdConfig.Timeout) * time.Second
+			if actualDuration != tt.expectedDuration {
+				t.Errorf("Expected timeout %v, got %v", tt.expectedDuration, actualDuration)
+			}
+		})
 	}
 }
