@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestRrmTypeAliases(t *testing.T) {
@@ -318,7 +320,7 @@ func TestRrmIntegration(t *testing.T) {
 
 func TestGetRrmMeasurement_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC RRM measurement response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(`{
@@ -338,7 +340,7 @@ func TestGetRrmMeasurement_WithRealResponse(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -358,7 +360,7 @@ func TestGetRrmMeasurement_WithRealResponse(t *testing.T) {
 
 func TestGetRrmMeasurement_WithErrorHandling(t *testing.T) {
 	// Create a test server that returns 403 forbidden error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, err := w.Write([]byte(`{"error": "Access forbidden"}`))
 		if err != nil {
@@ -368,7 +370,7 @@ func TestGetRrmMeasurement_WithErrorHandling(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}

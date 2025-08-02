@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestClientOperTypeAliases(t *testing.T) {
@@ -192,7 +194,7 @@ func TestClientOperIntegration(t *testing.T) {
 
 func TestGetClientOper_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC API response structure
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mock response based on real WNC API structure
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
@@ -222,7 +224,7 @@ func TestGetClientOper_WithRealResponse(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -244,7 +246,7 @@ func TestGetClientOper_WithRealResponse(t *testing.T) {
 
 func TestGetClientGlobalOper_WithRealResponse(t *testing.T) {
 	// Create a test server with real WNC API response structure
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mock response based on real WNC API structure
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
@@ -265,7 +267,7 @@ func TestGetClientGlobalOper_WithRealResponse(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -287,7 +289,7 @@ func TestGetClientGlobalOper_WithRealResponse(t *testing.T) {
 
 func TestGetClientOper_ErrorHandling(t *testing.T) {
 	// Create a test server that returns errors
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		_, err := w.Write([]byte(`{"error": "Unauthorized"}`))
 		if err != nil {
@@ -297,7 +299,7 @@ func TestGetClientOper_ErrorHandling(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "invalid-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(server.URL, "invalid-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -426,7 +428,7 @@ func TestNewClientWithOptions_Coverage(t *testing.T) {
 
 func TestAdditionalAPIFunctions_Coverage(t *testing.T) {
 	// Create a test server for additional API functions
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/yang-data+json")
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(`{"test": "response"}`))
@@ -437,7 +439,7 @@ func TestAdditionalAPIFunctions_Coverage(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	client, err := NewClientWithTimeout(strings.TrimPrefix(server.URL, "https://"), "test-token", 30*time.Second, boolPtr(false))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
