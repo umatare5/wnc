@@ -2,9 +2,9 @@
 
 This CLI application includes comprehensive tests that validate functionality and behavior across different components:
 
-- **Unit tests**: These tests validate serialization and deserialization between JSON and Go structs.
-- **Table-driven tests**: Multiple test cases are efficiently executed using a table-driven approach.
-- **Fail-fast error detection tests**: These tests fail immediately if an unexpected error occurs during execution.
+- **Unit tests**: These tests validate serialization and deserialization between JSON and Go structs used in RESTCONF responses.
+- **Mock tests**: REST API interactions are simulated using GoMock to ensure reliable and isolated tests without requiring actual controllers.
+- **CLI tests**: CLI behavior is verified using `urfave/cli/v3`, including argument parsing, subcommand execution, and flag validation.
 - **Integration tests**: These tests interact with multiple API endpoints to verify API communication and overall functionality.
 
 > [!Note]
@@ -12,7 +12,7 @@ This CLI application includes comprehensive tests that validate functionality an
 
 ## 🎯 Prerequisites
 
-### 🧩 For Unit, Table-driven and Fail-fast Tests
+### 🧩 For Unit, Mock and CLI Tests
 
 Unit tests require no special configuration and can be run in any Go development environment.
 
