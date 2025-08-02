@@ -1,7 +1,10 @@
 package cisco
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -311,4 +314,72 @@ func TestRrmIntegration(t *testing.T) {
 
 		t.Log("All RRM function signatures verified successfully")
 	})
+}
+
+func TestGetRrmMeasurement_WithRealResponse(t *testing.T) {
+	// Create a test server with real WNC RRM measurement response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/yang-data+json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{
+			"cisco-wireless-rrm-oper:rrm-measurement": {
+				"ap-mac": "28:ac:9e:bb:3c:80",
+				"radio-slot": 0,
+				"noise-floor": -92,
+				"interference": 15,
+				"channel-utilization": 25,
+				"client-count": 8
+			}
+		}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetRrmMeasurement function
+	result, err := GetRrmMeasurement(client, context.Background())
+	if err != nil {
+		t.Errorf("GetRrmMeasurement failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected non-nil result")
+	} else {
+		t.Logf("GetRrmMeasurement returned result successfully")
+	}
+}
+
+func TestGetRrmMeasurement_WithErrorHandling(t *testing.T) {
+	// Create a test server that returns 403 forbidden error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		_, err := w.Write([]byte(`{"error": "Access forbidden"}`))
+		if err != nil {
+			t.Errorf("Failed to write error response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetRrmMeasurement with error response
+	result, err := GetRrmMeasurement(client, context.Background())
+	if err == nil {
+		t.Error("Expected error for forbidden response")
+	}
+
+	if result != nil {
+		t.Error("Expected nil result for error response")
+	}
 }

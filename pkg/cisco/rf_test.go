@@ -1,7 +1,10 @@
 package cisco
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -141,4 +144,74 @@ func TestRfIntegration(t *testing.T) {
 
 		t.Log("GetRfTags function signature verified successfully")
 	})
+}
+
+func TestGetRfTags_WithRealResponse(t *testing.T) {
+	// Create a test server with real WNC RF tags response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/yang-data+json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{
+			"cisco-wireless-rf-cfg:rf-tags": {
+				"rf-tag": [
+					{
+						"name": "default-rf-tag",
+						"description": "Default RF Tag Policy",
+						"2.4ghz-rf-policy": "default-2.4ghz-policy",
+						"5ghz-rf-policy": "default-5ghz-policy"
+					}
+				]
+			}
+		}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetRfTags function
+	result, err := GetRfTags(client, context.Background())
+	if err != nil {
+		t.Errorf("GetRfTags failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected non-nil result")
+	} else {
+		t.Logf("GetRfTags returned result successfully")
+	}
+}
+
+func TestGetRfTags_WithErrorHandling(t *testing.T) {
+	// Create a test server that returns 500 error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err := w.Write([]byte(`{"error": "Internal Server Error"}`))
+		if err != nil {
+			t.Errorf("Failed to write error response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetRfTags with error response
+	result, err := GetRfTags(client, context.Background())
+	if err == nil {
+		t.Error("Expected error for server error response")
+	}
+
+	if result != nil {
+		t.Error("Expected nil result for error response")
+	}
 }

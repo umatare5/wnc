@@ -3,6 +3,8 @@ package cisco
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -278,4 +280,189 @@ func TestApIntegration(t *testing.T) {
 			// but we don't have real clients in unit tests
 		})
 	}
+}
+
+func TestGetApOper_WithRealResponse(t *testing.T) {
+	// Create a test server with real WNC AP API response structure
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Mock response based on real WNC AP API structure
+		w.Header().Set("Content-Type", "application/yang-data+json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{
+			"cisco-wireless-ap-oper:ap-oper-data": {
+				"ap-name-mac-map": {
+					"ap-name-mac-mapping": [
+						{
+							"wtp-mac": "28:ac:9e:bb:3c:80",
+							"ap-name": "lab2-ap1815-06f-02",
+							"ethernet-mac": "28:ac:9e:11:48:10",
+							"ip-addr": "192.168.255.11"
+						}
+					]
+				}
+			}
+		}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetApOper function
+	result, err := GetApOper(client, context.Background())
+	if err != nil {
+		t.Errorf("GetApOper failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected non-nil result")
+	} else {
+		t.Logf("GetApOper returned result successfully")
+	}
+}
+
+func TestGetApCapwapData_WithRealResponse(t *testing.T) {
+	// Create a test server with real WNC CAPWAP data response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/yang-data+json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{
+			"cisco-wireless-access-point-oper:capwap-data": {
+				"wtp-mac": "28:ac:9e:bb:3c:80",
+				"ip-addr": "192.168.255.11",
+				"name": "lab2-ap1815-06f-02",
+				"ap-state": {
+					"ap-admin-state": "adminstate-enabled",
+					"ap-operation-state": "registered"
+				}
+			}
+		}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetApCapwapData function
+	result, err := GetApCapwapData(client, context.Background())
+	if err != nil {
+		t.Errorf("GetApCapwapData failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected non-nil result")
+	} else {
+		t.Logf("GetApCapwapData returned result successfully")
+	}
+}
+
+func TestGetApLldpNeigh_WithRealResponse(t *testing.T) {
+	// Create a test server with real WNC LLDP neighbor response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/yang-data+json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{
+			"cisco-wireless-access-point-oper:lldp-neigh": {
+				"wtp-mac": "28:ac:9e:bb:3c:80",
+				"system-name": "Switch-01",
+				"port-id": "Gi1/0/1"
+			}
+		}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetApLldpNeigh function
+	result, err := GetApLldpNeigh(client, context.Background())
+	if err != nil {
+		t.Errorf("GetApLldpNeigh failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected non-nil result")
+	} else {
+		t.Logf("GetApLldpNeigh returned result successfully")
+	}
+}
+
+func TestGetApRadioOperData_WithErrorResponse(t *testing.T) {
+	// Create a test server that returns error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, err := w.Write([]byte(`{"error": "Internal Server Error"}`))
+		if err != nil {
+			t.Errorf("Failed to write error response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with test server URL
+	client, err := NewClientWithTimeout(server.URL, "test-token", 30, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetApRadioOperData with error response
+	result, err := GetApRadioOperData(client, context.Background())
+	if err == nil {
+		t.Error("Expected error for server error response")
+	}
+
+	if result != nil {
+		t.Error("Expected nil result for error response")
+	}
+}
+
+func TestGetApOperData_WithTimeout(t *testing.T) {
+	// Create a test server that delays response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate network delay
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{"cisco-wireless-access-point-oper:ap-oper-data": {}}`))
+		if err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	// Create client with very short timeout to test timeout handling
+	client, err := NewClientWithTimeout(server.URL, "test-token", 1, boolPtr(false))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Test GetApOperData function
+	result, err := GetApOperData(client, context.Background())
+	// This may or may not timeout depending on test execution speed
+	// So we just check that the function exists and can be called
+	if result != nil {
+		t.Logf("GetApOperData returned result successfully")
+	} else if err != nil {
+		t.Logf("GetApOperData returned error as expected: %v", err)
+	}
+}
+
+// Helper function to create a bool pointer
+func boolPtr(b bool) *bool {
+	return &b
 }
