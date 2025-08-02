@@ -30,7 +30,7 @@ type ShowApTagData struct {
 
 // ShowAp retrieves and merges AP ap from multiple controllers
 func (au *ApUsecase) ShowAp(controllers *[]config.Controller, isSecure *bool) []*ShowApData {
-	var data []*ShowApData
+	data := make([]*ShowApData, 0)
 
 	// Return empty slice if repository is nil
 	if au.Repository == nil {
@@ -90,7 +90,7 @@ func (au *ApUsecase) ShowAp(controllers *[]config.Controller, isSecure *bool) []
 
 // ShowAp retrieves and merges AP ap from multiple controllers
 func (au *ApUsecase) ShowApTag(controllers *[]config.Controller, isSecure *bool) []*ShowApTagData {
-	var data []*ShowApTagData
+	data := make([]*ShowApTagData, 0)
 
 	// Return empty slice if repository is nil
 	if au.Repository == nil {

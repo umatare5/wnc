@@ -24,7 +24,7 @@ type ShowWlanData struct {
 
 // ShowWlan retrieves and merges WLAN data from multiple controllers
 func (u *WlanUsecase) ShowWlan(controllers *[]config.Controller, isSecure *bool) []*ShowWlanData {
-	var data []*ShowWlanData
+	data := make([]*ShowWlanData, 0)
 
 	// Return empty slice if repository is nil
 	if u.Repository == nil {

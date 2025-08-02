@@ -27,7 +27,7 @@ type ShowClientData struct {
 
 // ShowClient retrieves and merges client data from multiple controllers
 func (u *ClientUsecase) ShowClient(controllers *[]config.Controller, isSecure *bool) []*ShowClientData {
-	var data []*ShowClientData
+	data := make([]*ShowClientData, 0)
 
 	// Return empty slice if repository is nil
 	if u.Repository == nil {
@@ -92,6 +92,10 @@ func (u *ClientUsecase) ShowClient(controllers *[]config.Controller, isSecure *b
 }
 
 func (u *ClientUsecase) filterBySSID(clients []*ShowClientData) []*ShowClientData {
+	// Return all clients if config is nil
+	if u.Config == nil {
+		return clients
+	}
 	filter := u.Config.ShowCmdConfig.SSID
 	if filter == "" {
 		return clients
@@ -106,6 +110,10 @@ func (u *ClientUsecase) filterBySSID(clients []*ShowClientData) []*ShowClientDat
 }
 
 func (u *ClientUsecase) filterByRadio(clients []*ShowClientData) []*ShowClientData {
+	// Return all clients if config is nil
+	if u.Config == nil {
+		return clients
+	}
 	filter := u.Config.ShowCmdConfig.Radio
 	if filter == "" {
 		return clients
