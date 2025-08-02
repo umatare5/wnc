@@ -7,7 +7,7 @@ applyTo: "**/*.sh"
 
 Copilot **MUST** comply with all instructions described in this document when editing or creating any bash shell scripts in this repository.
 
-However, when there are conflicts between this document and `general.instructions.md`, **ALWAYS** prioritize the instructions in `general.instructions.md`.
+**Copilot MUST follow all instructions. General instructions take priority in conflicts.**
 
 ---
 
