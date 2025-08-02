@@ -95,7 +95,7 @@ func TestGetRadioCfgWithContext(t *testing.T) {
 		},
 		{
 			name: "context_with_value",
-			ctx:  context.WithValue(context.Background(), "test", "value"),
+			ctx:  context.WithValue(context.Background(), testContextKey("test"), "value"),
 		},
 	}
 
