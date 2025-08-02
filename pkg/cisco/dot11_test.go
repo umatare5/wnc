@@ -95,7 +95,7 @@ func TestGetDot11CfgWithContext(t *testing.T) {
 		},
 		{
 			name: "context_with_value",
-			ctx:  context.WithValue(context.Background(), "test", "value"),
+			ctx:  context.WithValue(context.Background(), testContextKey("test"), "value"),
 		},
 		{
 			name: "context_with_timeout",
