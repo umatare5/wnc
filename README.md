@@ -1,13 +1,23 @@
-# 📡 wnc - Wireless Network Controller CLI
+<div align="center">
 
-![GitHub Tag](https://img.shields.io/github/v/tag/umatare5/wnc?label=Latest%20version)
-[![Go Reference](https://pkg.go.dev/badge/umatare5/wnc.svg)](https://pkg.go.dev/github.com/umatare5/wnc)
-[![Go Report Card](https://goreportcard.com/badge/github.com/umatare5/wnc)](https://goreportcard.com/report/github.com/umatare5/wnc)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/umatare5/wnc/blob/main/LICENSE)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10820/badge)](https://www.bestpractices.dev/projects/10820)
-[![Cisco DevNet Published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/umatare5/wnc)
+<img src="docs/assets/logo.png" width="200px"/>
 
-A command-line interface tool for managing Cisco Catalyst 9800 Wireless Network Controllers.
+  <h1>wnc</h1>
+
+  <p>A command-line interface tool for managing Cisco Catalyst 9800 Wireless Network Controllers.</p>
+
+  <p>
+    <img alt="GitHub Tag" src="https://img.shields.io/github/v/tag/umatare5/wnc?label=Latest%20version" />
+    <a href="https://goreportcard.com/report/github.com/umatare5/wnc"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/umatare5/wnc" /></a><br>
+    <a href="https://www.bestpractices.dev/projects/10820"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/10820/badge" /></a>
+    <a href="https://pkg.go.dev/github.com/umatare5/wnc"><img alt="Go Reference" src="https://pkg.go.dev/badge/umatare5/wnc.svg" /></a>
+    <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+    <a href="https://developer.cisco.com/codeexchange/github/repo/umatare5/wnc"><img alt="Published" src="https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg" /></a>
+  </p>
+
+</div>
+
+## ✨️ Key Features
 
 - **🚀 Multi-Controller Support**: Efficiently operate several Wireless Network Controllers
 - **🧠 Easy Operations**: Focus on key tasks without remembering many complex wireless commands or syntax
