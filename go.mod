@@ -6,7 +6,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/golang/mock v1.6.0
 	github.com/jinzhu/configor v1.2.2
-	github.com/olekukonko/tablewriter v1.0.9
+	github.com/olekukonko/tablewriter v1.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/umatare5/cisco-ios-xe-wireless-go v0.1.0
 	github.com/urfave/cli/v3 v3.4.1
