@@ -181,15 +181,12 @@ To release a new version:
 1. **Update the version** in the `VERSION` file
 2. **Submit a pull request** with the updated `VERSION` file
 
-Once merged, the GitHub Workflow will automatically:
-
-- **Create and push a new tag** based on the `VERSION` file
-
-After that, manual release using [GitHub Actions: release workflow](https://github.com/umatare5/wnc/actions/workflows/release.yaml).
+Once the pull request is merged, the GitHub Workflow automatically creates and pushes a new tag, after which I manually publish a release using the [GitHub Actions release workflow][GitHub Actions: release workflow](https://github.com/umatare5/controld-exporter/actions/workflows/release.yaml).
 
 ## 🙏 Acknowledgments
 
-This code was developed with the assistance of **GitHub Copilot Agent Mode**. I extend our heartfelt gratitude to the global developer community who have contributed their knowledge, code, and expertise to open source projects and public repositories.
+I launched this project with the help of **GitHub Copilot Coding Assistant**, and I am grateful to the global developer community for their contributions to open source projects and public repositories.
+
 
 ## 📄 License
 
