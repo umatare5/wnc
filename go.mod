@@ -9,7 +9,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/umatare5/cisco-ios-xe-wireless-go v0.1.0
-	github.com/urfave/cli/v3 v3.4.1
+	github.com/urfave/cli/v3 v3.6.1
 )
 
 require (
