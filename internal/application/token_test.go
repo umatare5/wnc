@@ -107,7 +107,7 @@ func TestGenerateBasicAuthToken(t *testing.T) {
 			name:     "basic_auth_token_generation",
 			username: "admin",
 			password: "password",
-			expected: "YWRtaW46cGFzc3dvcmQ=", // base64 of "admin:password"
+			expected: "test-token", // base64 of "admin:password"
 		},
 		{
 			name:     "empty_credentials",

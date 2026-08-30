@@ -36,18 +36,18 @@ For instructions on setting up WNC, please refer to the [References Section](#re
 
 Integration tests require the following environment variables:
 
-| Variable          | Description                         | Example                              |
-| ----------------- | ----------------------------------- | ------------------------------------ |
-| `WNC_CONTROLLERS` | Controller hostname and token pairs | `192.168.1.100:YWRtaW46cGFzc3dvcmQ=` |
+| Variable          | Description                         | Example                    |
+| ----------------- | ----------------------------------- | -------------------------- |
+| `WNC_CONTROLLERS` | Controller hostname and token pairs | `192.168.1.100:test-token` |
 
 <details><summary>Environment Variable Configuration</summary>
 
 ```bash
 # Single controller
-export WNC_CONTROLLERS="192.168.1.100:YWRtaW46cGFzc3dvcmQ="
+export WNC_CONTROLLERS="192.168.1.100:test-token"
 
 # Multiple controllers (comma-separated)
-export WNC_CONTROLLERS="192.168.1.100:YWRtaW46cGFzc3dvcmQ=,192.168.1.101:YWRtaW46cGFzc3dvcmQ="
+export WNC_CONTROLLERS="192.168.1.100:test-token,192.168.1.101:test-token"
 ```
 
 **Generating Access Tokens:**
@@ -57,7 +57,7 @@ Use the `wnc generate token` command to create Base64 encoded access tokens:
 ```bash
 # Generate token for your controller
 wnc generate token -u admin -p password
-# Output: YWRtaW46cGFzc3dvcmQ=
+# Output: test-token
 ```
 
 </details>

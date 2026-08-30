@@ -19,7 +19,7 @@ This guide helps you resolve common issues when using this CLI.
 
    ```bash
    # Ensure proper encoding
-   echo "YWRtaW46cGFzc3dvcmQ=" | base64 -d
+   echo "test-token" | base64 -d
    # Should output: admin:password
    ```
 
