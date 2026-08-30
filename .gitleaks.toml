@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+# The one fixture token the tests assert never reaches a diagnostic. It authenticates against
+# nothing and is committed on purpose, and condition = "AND" below is mandatory — OR-ed, the path
+# alone would exempt every secret in every test file.
+[[rules]]
+id = "generic-api-key"
+[rules.allowlist]
+description = "the deliberate fixture token in the test suite"
+condition = "AND"
+paths = ['''_test\.go$''']
+regexes = ['''TestToken0123456789ABCDEF==''']
