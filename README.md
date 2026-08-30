@@ -1,9 +1,9 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo_dark.png" width="180px" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="180px" />
-    <img alt="wnc" src="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="180px" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo_dark.png" width="115px" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="115px" />
+    <img alt="wnc" src="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="115px" />
   </picture>
 
   <h1>wnc</h1>
