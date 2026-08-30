@@ -5,6 +5,7 @@ BUILD_DIR := ./tmp
 BINARY_PATH := $(BUILD_DIR)/$(BINARY_NAME)
 COVERAGE_DIR := ./coverage
 IMAGE_DIR := $(BUILD_DIR)/image
+GOARCH := $(shell go env GOARCH)
 
 LDFLAGS := -X github.com/umatare5/wnc/internal/cli.version=$(shell cat VERSION)
 BUILD_FLAGS := -trimpath -ldflags "$(LDFLAGS)"
@@ -65,12 +66,13 @@ clean:
 	rm -rf $(BUILD_DIR) $(COVERAGE_DIR)
 	find . -name "*.bak*" -type f -delete 2>/dev/null || true
 
-# Assembles the same context goreleaser hands docker — see the Dockerfile header.
+# Assembles the same context goreleaser hands docker — see the Dockerfile header. The
+# linux/$(GOARCH) subdirectory is what makes the shared COPY line resolve in both.
 image:
-	mkdir -p $(IMAGE_DIR)
-	CGO_ENABLED=0 GOOS=linux go build $(BUILD_FLAGS) -o $(IMAGE_DIR)/$(BINARY_NAME) ./cmd
+	mkdir -p $(IMAGE_DIR)/linux/$(GOARCH)
+	CGO_ENABLED=0 GOOS=linux go build $(BUILD_FLAGS) -o $(IMAGE_DIR)/linux/$(GOARCH)/$(BINARY_NAME) ./cmd
 	cp LICENSE $(IMAGE_DIR)/
-	docker build -f Dockerfile -t $(USER)/$(BINARY_NAME) $(IMAGE_DIR)
+	docker build --platform linux/$(GOARCH) -f Dockerfile -t $(USER)/$(BINARY_NAME) $(IMAGE_DIR)
 
 # --allow-missing-config is load-bearing: the hook path is the shared git common
 # dir, so the hook installed from one worktree also runs on every other one and
