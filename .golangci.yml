@@ -1,35 +1,242 @@
-# golangci-lint configuration file
-# More information: https://golangci-lint.run/usage/configuration/
+version: "2"
 
 run:
   timeout: 5m
-  # Removed modules-download-mode to allow flexible module operations
-
-linters:
-  enable:
-    - govet              # Reports suspicious constructs
-    - errcheck           # Check for unhandled errors
-    - gosimple           # Simplify your Go code
-    - staticcheck        # Comprehensive static analysis
-    - ineffassign        # Detects ineffective assignments
-    - unused             # Finds unused variables
-
-# Settings for specific linters
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
+  tests: true
+  issues-exit-code: 1
 
 issues:
-  # Exclude specific warning types
-  exclude-rules:
-    - linters:
-        - gocyclo
-      text: "(?i)cyclomatic complexity"
-  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  # The default keeps one issue per line, which hides a second linter reporting the same line.
+  uniq-by-line: false
 
-# Files and folders to ignore
-skip-dirs:
-  - vendor
-  - build
-  - tmp
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - unused
+    - errorlint
+    - gosec
+    - goconst
+    - gocritic
+    - mnd
+    - revive
+    - unparam
+    - unconvert
+    - bodyclose
+    - asasalint
+    - misspell
+    - usestdlibvars
+    - perfsprint
+    - paralleltest
+    - tagliatelle
+    - thelper
+
+    - intrange
+    - copyloopvar
+    - exptostd
+
+    - nilnesserr
+    - predeclared
+    - godot
+    - whitespace
+    - fatcontext
+    - nosprintfhostport
+    - depguard
+    - forbidigo
+
+  settings:
+    gosec:
+      config:
+        # gosec's default G101 list carries the bare fragments "pass", "pwd", "pw" and "cred",
+        # and "capwap" contains "pw", so every RESTCONF path and RPC name in this tree tripped
+        # it. Whole words only below.
+        G101:
+          pattern: (?i)passwd|password|secret|token|apiKey|api_key|bearer|credential|private_key
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+
+    staticcheck:
+      checks:
+        - all
+
+    errorlint:
+      errorf: true
+      asserts: true
+
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+      ignore-tests: true # Test tables enumerate the controller's enum values; that is data, not duplication
+
+    gocritic:
+      enable-all: true
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+        - commentedOutCode
+        - whyNoLint
+
+    mnd:
+      checks: [argument, assign, case, return]
+      ignored-functions: ["time.Duration"]
+
+    revive:
+      confidence: 0.8
+      rules:
+        - name: indent-error-flow
+          arguments: [preserveScope]
+        - name: function-length
+          arguments: [80, 0]
+        - name: error-strings
+        - name: error-naming
+        - name: var-naming
+          arguments:
+            # Argument one is revive's allowlist — these spellings are left as written;
+            # argument two is its blocklist, which adds initialisms revive then requires in
+            # upper case.
+            - [
+                "ARP", "CDP", "LLDP", "LACP", "VLAN", "EAP", "EAPOL",
+                "WTP", "STA",
+                "AP", "WLAN", "WLC", "WNC", "SSID",
+              ]
+            - [
+                "APF", "AWIPS", "BLE", "MDNS", "RF", "RRM",
+                "MAC", "IPv4", "IPv6", "DHCP", "RADIUS",
+                "RSSI", "SNR", "PHY",
+                "CAPWAP", "DTLS", "DCA", "TPC", "DFS", "FT", "PMF", "PSK", "SAE", "OWE", "WPA", "AKM",
+              ]
+            - - skip-initialism-name-checks: false
+
+    misspell:
+      locale: US
+
+    perfsprint:
+      int-conversion: true
+      err-error: true
+      errorf: true
+      sprintf1: true
+
+    paralleltest:
+      ignore-missing: false
+
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+
+    govet:
+      enable-all: true
+      disable:
+        - shadow # Noisy false positives
+        - fieldalignment # Churn for marginal benefit
+
+    copyloopvar:
+      check-alias: true
+
+    forbidigo:
+      # analyze-types is on because the two package-qualified patterns below match source
+      # text by default, so an aliased fmt or sort import would evade them.
+      analyze-types: true
+      forbid:
+        - pattern: '^fmt\.Print.*$'
+          msg: "write to an explicit io.Writer with fmt.Fprint*"
+        - pattern: '^sort\.(Slice|SliceStable|Sort)$'
+          msg: "use slices.SortStableFunc"
+
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          files: [$all]
+          deny:
+            - pkg: "log$"
+              desc: "This CLI logs through internal/log (logrus); the std log package writes to its own sink"
+            # The anchor is load-bearing: depguard matches by prefix, so an unanchored
+            # "encoding/json" would also ban encoding/json/v2 and encoding/json/jsontext.
+            - pkg: "encoding/json$"
+              desc: "Use encoding/json/v2; mixing v1 and v2 mixes their omitempty and nil-slice rules"
+            - pkg: "github.com/pkg/errors$"
+              desc: "Use the std errors package"
+            - pkg: "math/rand$"
+              desc: "Use math/rand/v2"
+            - pkg: "golang.org/x/exp/maps$"
+              desc: "Use the std maps package"
+            - pkg: "golang.org/x/exp/slices$"
+              desc: "Use the std slices package"
+        slog:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/internal/log/*.go"
+          deny:
+            - pkg: "log/slog$"
+              desc: "The SDK takes a *slog.Logger; internal/log owns that bridge so every record lands in one logger"
+
+  exclusions:
+    generated: lax
+    warn-unused: false
+    paths:
+      - tmp/
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - goconst
+          - gosec
+          - ineffassign
+          - mnd
+          - perfsprint
+          - staticcheck
+          - unused
+          - tagliatelle
+      # This file is a reference table transcribed from the controller's own YANG, so
+      # repetition across domains is the point (goconst), and a domain is complete because the
+      # schema says so rather than because a column reads it yet (unused).
+      - path: ^internal/show/enum\.go$
+        linters:
+          - goconst
+          - gosec
+          - unused
+      # A hand-written struct for a raw read mirrors the controller's kebab-case leaf
+      # names, which are not this project's to rename.
+      - path: ^internal/wnc/
+        linters:
+          - tagliatelle
+      # These reach t.Setenv through runCLI in cli_test.go, which forbids t.Parallel; the
+      # reason the environment is cleared is in that file header.
+      - path: ^internal/cli/(admin|cli|deauth|reset|save|tag)_test\.go$
+        linters:
+          - paralleltest
+      - path: ^internal/config/resolve_test\.go$
+        linters:
+          - paralleltest
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/umatare5/wnc)
+    gofumpt:
+      extra:
+        group-params: true
+    goimports:
+      local-prefixes:
+        - github.com/umatare5/wnc
+    golines:
+      max-len: 120
+
+output:
+  show-stats: false

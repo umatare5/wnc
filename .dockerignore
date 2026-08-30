@@ -1,7 +1,5 @@
-.*
-!go.mod
-!go.sum
-!cmd/
-!internal/
-!pkg/
-wnc
+# The image is assembled by goreleaser from a context holding only the binary and the
+# licence, so nothing in the repository needs to be sent.
+*
+!wnc
+!LICENSE

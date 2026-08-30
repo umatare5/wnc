@@ -1,4 +1,3 @@
-# .taplo.toml is a configuration file for VS Code Extension "Ever Better TOML"
+# Read only by the VS Code extension "Even Better TOML"; no CI gate consults this file.
 
-# Excludes the specific file from syntax checking and formatting.
 exclude = [".air.toml"]

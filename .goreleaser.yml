@@ -1,14 +1,9 @@
-# .goreleaser.yml for wnc CLI package
-
 project_name: wnc
 version: 2
 
-# Distribution directory
 dist: tmp/dist
 
-# Build destination
 github_urls:
-  # set to true if you use a self-signed certificate
   skip_tls_verify: false
 
 before:
@@ -17,136 +12,107 @@ before:
     - go mod verify
 
 builds:
-  - main: cmd/main.go
+  - main: ./cmd
     id: wnc
     binary: wnc
+    flags:
+      - -trimpath
     targets:
       - linux_amd64
       - linux_arm64
       - darwin_amd64
       - darwin_arm64
       - windows_amd64
+    env:
+      - CGO_ENABLED=0
     ldflags:
-      - -X 'github.com/umatare5/wnc/pkg/version.Version={{ .Version }}'
+      - -s -w -X 'github.com/umatare5/wnc/internal/cli.version={{ .Version }}'
+    hooks:
+      post:
+        # The setting is recorded in the binary, so this fails the release if cgo crept
+        # back in. It has to stay a single command with no pipe: goreleaser runs a hook
+        # without a shell, so a pipeline would be passed as arguments and assert nothing.
+        - cmd: grep -q CGO_ENABLED=0 {{ .Path }}
 
 archives:
-  - name_template: '{{ .ProjectName }}-v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  - name_template: "{{ .ProjectName }}-v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
-      - "*.go"
-      - "*.md"
-      - "go.mod"
-      - "go.sum"
+      - "README.md"
       - "LICENSE"
+      - "docs/*.md"
+      - "docs/commands/*.md"
+    format_overrides:
+      - goos: windows
+        formats: ["zip"]
 
-# Docker configuration
-dockers:
-  - image_templates:
-      - "ghcr.io/umatare5/wnc:latest-amd64"
-      - "ghcr.io/umatare5/wnc:{{ .Tag }}-amd64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}-amd64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}.{{ .Minor }}-amd64"
+# A prerelease must not move latest or the minor tag.
+dockers_v2:
+  - id: exact
+    images: ["ghcr.io/umatare5/wnc"]
+    tags: ["{{ .Tag }}"]
+    platforms: ["linux/amd64", "linux/arm64"]
     dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.description=CLI tool for managing Cisco C9800 Wireless Network Controllers"
-      - "--label=org.opencontainers.image.url=https://github.com/umatare5/wnc"
-      - "--label=org.opencontainers.image.source=https://github.com/umatare5/wnc"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.licenses=MIT"
+    ids: [wnc]
     extra_files:
-      - go.mod
-      - go.sum
-      - cmd/
-      - internal/
-      - pkg/
-    goarch: amd64
-  - image_templates:
-      - "ghcr.io/umatare5/wnc:latest-arm64"
-      - "ghcr.io/umatare5/wnc:{{ .Tag }}-arm64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}-arm64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "LICENSE"
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: "CLI for Cisco Catalyst 9800 Wireless Network Controllers"
+      org.opencontainers.image.url: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.source: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: "MIT"
+  - id: moving
+    disable: '{{ if .Prerelease }}true{{ end }}'
+    images: ["ghcr.io/umatare5/wnc"]
+    tags:
+      - "latest"
+      - "v{{ .Major }}.{{ .Minor }}"
+    platforms: ["linux/amd64", "linux/arm64"]
     dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.description=CLI tool for managing Cisco C9800 Wireless Network Controllers"
-      - "--label=org.opencontainers.image.url=https://github.com/umatare5/wnc"
-      - "--label=org.opencontainers.image.source=https://github.com/umatare5/wnc"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.licenses=MIT"
+    ids: [wnc]
     extra_files:
-      - go.mod
-      - go.sum
-      - cmd/
-      - internal/
-      - pkg/
-    goarch: arm64
-
-# Docker manifest for multi-platform images
-docker_manifests:
-  - name_template: "ghcr.io/umatare5/wnc:latest"
-    image_templates:
-      - "ghcr.io/umatare5/wnc:latest-amd64"
-      - "ghcr.io/umatare5/wnc:latest-arm64"
-  - name_template: "ghcr.io/umatare5/wnc:{{ .Tag }}"
-    image_templates:
-      - "ghcr.io/umatare5/wnc:{{ .Tag }}-amd64"
-      - "ghcr.io/umatare5/wnc:{{ .Tag }}-arm64"
-  - name_template: "ghcr.io/umatare5/wnc:v{{ .Major }}"
-    image_templates:
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}-amd64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}-arm64"
-  - name_template: "ghcr.io/umatare5/wnc:v{{ .Major }}.{{ .Minor }}"
-    image_templates:
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "ghcr.io/umatare5/wnc:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "LICENSE"
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: "CLI for Cisco Catalyst 9800 Wireless Network Controllers"
+      org.opencontainers.image.url: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.source: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: "MIT"
 
 release:
   prerelease: auto
-  draft: false
+  draft: true
   replace_existing_draft: true
   header: |
-    ## wnc v{{ .Version }}
+    ## {{ .ProjectName }} v{{ .Version }}
 
-    This release contains the CLI for interacting with Cisco Catalyst 9800 Wireless Network Controller.
+    A command-line interface for Cisco Catalyst 9800 Wireless Network Controllers.
 
-    ### 🐳 Container Images
+    > [!IMPORTANT]
+    > A minor release may rename or remove a column. Read the release notes before
+    > upgrading anything that parses the JSON output.
+
+    ### Container images
+
     ```bash
-    # Latest version
-    docker run --rm ghcr.io/umatare5/wnc:latest --help
-
-    # Specific version
-    docker run --rm ghcr.io/umatare5/wnc:{{ .Tag }} show overview --help
-
-    # With environment variables
-    docker run --rm -e WNC_CONTROLLERS="wnc.example.com:token" ghcr.io/umatare5/wnc:{{ .Tag }} show overview
+    docker run --rm ghcr.io/umatare5/wnc:{{ .Tag }} --help
     ```
 
-    ### 📦 Binary Installation
-    ```bash
-    go install github.com/umatare5/wnc@v{{ .Version }}
-    ```
+    ### Binaries
 
+    Download a prebuilt binary for your platform from the assets below.
   footer: |
     **Full Changelog**: https://github.com/umatare5/wnc/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-    ### 📚 Documentation
-    - [README](https://github.com/umatare5/wnc/blob/{{ .Tag }}/README.md)
-    - [CLI Reference](https://github.com/umatare5/wnc/blob/{{ .Tag }}/docs/CLI_REFERENCE.md)
-    - [Container Registry](https://github.com/umatare5/wnc/pkgs/container/wnc)
-
-# Generate checksums for source archives
 checksum:
   name_template: "{{ .ProjectName }}-v{{ .Version }}_checksums.txt"
 
-# Changelog configuration
 changelog:
   use: github
   sort: asc
@@ -155,20 +121,20 @@ changelog:
     - title: Features
       regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
       order: 0
-    - title: Bug fixes
+    - title: Bug Fixes
       regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
       order: 1
-    - title: Documentation updates
+    - title: Documentation Updates
       regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
       order: 2
-    - title: Other work
+    - title: Others
       order: 999
   filters:
     exclude:
-      - '^test:'
-      - '^chore:'
-      - '^ci:'
+      - "^Merge branch "
+      - "^release:"
+      - "^ci:"
+      - "^test:"
 
-# Metadata for Go proxy and pkg.go.dev
 metadata:
-  mod_timestamp: '{{ .CommitTimestamp }}'
+  mod_timestamp: "{{ .CommitTimestamp }}"

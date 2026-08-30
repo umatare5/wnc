@@ -1,29 +1,23 @@
-# Temporary files
+# tmp/ is both the build directory and the worktree root, so nothing under it is tracked.
 tmp/
-
-# Test data files
-tests/
-test_data/
-
-# Build artifacts
 dist/
-*.exe
-*.dll
-*.so
-*.dylib
+coverage/
 
-# Test binaries
+# The leading slash is load-bearing: an unanchored "wnc" also matched the directory
+# internal/wnc/ and left the whole SDK layer untracked and invisible to "git add .".
+/wnc
+*.exe
 *.test
 
-# Coverage files
 *.out
 
-# IDE files
 .idea/
 *.swp
 *.swo
-.copilot_reports/
-
-# OS files
 .DS_Store
-Thumbs.db
+
+# Agent files
+# The trailing "*" is load-bearing: written as ".claude/" git never descends into the
+# directory, and the negation below cannot re-include the AGENTS.md symlink.
+.claude/*
+!.claude/CLAUDE.md
