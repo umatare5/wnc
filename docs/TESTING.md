@@ -1,212 +1,66 @@
-# 🧪 Testing
-
-This CLI application includes comprehensive tests that validate functionality and behavior across different components:
-
-- **Unit tests**: These tests validate serialization and deserialization between JSON and Go structs used in RESTCONF responses.
-- **Mock tests**: REST API interactions are simulated using GoMock to ensure reliable and isolated tests without requiring actual controllers.
-- **CLI tests**: CLI behavior is verified using `urfave/cli/v3`, including argument parsing, subcommand execution, and flag validation.
-- **Integration tests**: These tests interact with multiple API endpoints to verify API communication and overall functionality.
-
-> [!Note]
-> Currently, the test coverage is insufficient. All tests will be covered by the future release `v1.0.0`.
-
-## 🎯 Prerequisites
-
-### 🧩 For Unit, Mock and CLI Tests
-
-Unit tests require no special configuration and can be run in any Go development environment.
-
-| Requirement   | Version/Details  | Description                                          |
-| ------------- | ---------------- | ---------------------------------------------------- |
-| Go            | 1.24 or later    | Required for running tests and building the project. |
-| Testing Tools | Standard library | Built-in Go testing framework.                       |
-
-### 🔗 For Integration Tests
-
-#### 🎛️ 1. Cisco Catalyst 9800 Wireless Network Controller
-
-Integration tests require access to real Cisco Catalyst 9800 WNC(s).
-
-For instructions on setting up WNC, please refer to the [References Section](#references).
-
-> [!CAUTION]
-> Integration tests interact with real controllers and may affect their state. Use dedicated test controllers when possible.
-
-#### 🔧 2. Environment Variables
-
-Integration tests require the following environment variables:
-
-| Variable          | Description                         | Example                    |
-| ----------------- | ----------------------------------- | -------------------------- |
-| `WNC_CONTROLLERS` | Controller hostname and token pairs | `192.168.1.100:test-token` |
-
-<details><summary>Environment Variable Configuration</summary>
+# Testing
 
 ```bash
-# Single controller
-export WNC_CONTROLLERS="192.168.1.100:test-token"
-
-# Multiple controllers (comma-separated)
-export WNC_CONTROLLERS="192.168.1.100:test-token,192.168.1.101:test-token"
+make test-unit            # go test -race with coverage
+make test-unit-coverage   # plus an HTML report under ./coverage
+make lint                 # config verify, golangci-lint and go mod tidy
 ```
 
-**Generating Access Tokens:**
+`gotestsum` and `golangci-lint` are required — `make help` names the install commands.
 
-Use the `wnc generate token` command to create Base64 encoded access tokens:
+## How the suite is arranged
+
+Tests sit next to the code they cover, in the same package, so an unexported rule can be asserted directly rather than through a public surface built for the test. Tables and `t.Parallel()` are the default. There is no assertion library and no golden file.
+
+## The RESTCONF layer
+
+`internal/wnc` is tested against a TLS test server serving canned responses, routed on the last element of the request path. The SDK pins its own dialer, so no transport can be injected and the server has to be a real listener — one test asserts that much before the fixture-driven ones rely on it.
+
+Fixtures carry no value read off a device. Addresses come from the documentation range RFC 7042 reserves, and one fixture deliberately includes a credential leaf to assert the hand-written struct drops it at decode.
+
+## The fan-out
+
+`internal/show` tests the fan-out with a fetch function that never reaches the network. Client construction still happens for real, against hosts from the RFC 5737 test range, so the outcome classification, the reporting order and the "print nothing when everything failed" rule are exercised without a server.
+
+## The command tree
+
+`internal/cli` drives the real command tree end to end and asserts the exit-code contract: usage faults, an unknown command, the help paths, the settings rejections and the three ways `generate-token` takes a password.
+
+Nothing in that file runs in parallel, and that is deliberate: urfave reads the `WNC_*` variables at parse time, so the suite clears them with `t.Setenv`, which forbids `t.Parallel`. `make test-unit` clears them again at the process level so a developer's own shell cannot change what the assertions see.
+
+## Invariants
+
+Some checks are about shape rather than behaviour, and they exist because the failure they catch is silent:
+
+- A column is declared in three places — the sort-key list, the column list and the row struct's json tags — and all three must agree, in order. json/v2 drops a tag a sibling field repeats, which would otherwise leave a column in the table and absent from the JSON with nothing failing.
+- `omitempty` is banned outright, because it also drops a reported zero, an empty string and a reported false. `omitzero` is allowed only on a pointer, where the zero value is nil and so genuinely means "not reported".
+- The json `format` tag is banned: every value of it is rejected at run time, after passing both the compiler and the linter.
+- Every command in the tree must carry the usage hook, because urfave consults only the running command's own.
+
+## Coverage
+
+CI enforces a floor. Run `make test-unit-coverage` and open `coverage/report.html` to see what a change left uncovered.
+
+## Against a real controller
+
+There is no integration-test target. A `show` command is verified by running it and comparing the result with the controller's own output:
 
 ```bash
-# Generate token for your controller
-wnc generate token -u admin -p password
-# Output: test-token
+wnc show overview -c "<host>" --insecure
 ```
 
-</details>
+`show ap dot11 5ghz summary`, `show ap uptime`, `show ap tag summary`, `show wlan id <n>` and `show wireless client summary` each cover one view. The three tag views compare against `show wireless tag {rf,site,policy} summary` and `detailed <name>`, and three of their headings deliberately differ from the device's: it labels the per-band RF profile `2.4ghz RF Policy`, the AP join profile `AP Profile` and the bound policy profile `Policy Name`, where these views follow the YANG leaf and the write flag instead.
 
-## 🚀 Running Tests
+The seven trees that act cannot be verified that way, because running one changes the controller. `--dry-run` exercises everything up to the write, and a `show` command reads the result back afterwards:
 
-The project includes convenient Makefile targets for testing:
-
-| Command                 | Description                                                        |
-| ----------------------- | ------------------------------------------------------------------ |
-| `make test-unit`        | Run unit tests only with enhanced output formatting.               |
-| `make test-integration` | Run integration tests with enhanced output. \* Requires WNC access |
-
-<details><summary>Example of gotestsum Enhanced Output</summary>
-
-```text
-📦 github.com/umatare5/wnc/cmd (85.7% coverage)
-  ✅ TestMainFunction (0.00s)
-  ✅ TestVersionCommand (0.01s)
-
-📦 github.com/umatare5/wnc/internal/application (72.3% coverage)
-  ✅ TestShowOverview (0.05s)
-  ✅ TestShowAP (0.03s)
-  ✅ TestShowClient (0.02s)
-    application_test.go:156: Show client request successful
-
-📦 github.com/umatare5/wnc/internal/cli (15.2% coverage)
-  🚧 TestIntegrationShowOverview (0.00s)
-    integration_test.go:45: WNC_CONTROLLERS not set - skipping integration tests
-  ✅ TestIntegrationShowAP (5.23s)
-    integration_test.go:89: Integration test completed successfully with 3 controllers
+```bash
+wnc --dry-run disable radio --ap-name "<ap-name>" --slot 1 -c "<host>"
 ```
 
-</details>
+`--dry-run` stops before the RPC, so it verifies everything except the write. The write itself was measured once on 17.18 for all four access-point RPCs, three of them through the ap-name arm; a dry run is not a substitute for repeating that on a release where it matters. `save-config` was measured on all three releases, `deauth --mac` on 17.18.4a and `deauth --username` on 17.15.6.
 
-## 📊 Test Data Collection
+**A write measurement needs a stable target, not just a before and an after.** The `deauth --username` post was attributed to its effect because the target's association had been unchanged for 82 minutes across four snapshots, while two no-post control windows of 35 seconds each moved 1 and 0 of the 18 clients. Without the stability, one moved client is inside the estate's own churn.
 
-Integration tests automatically collect and save real WNC data to JSON files for validation and debugging purposes.
+**The 400 on 17.12.8 has no CLI-level measurement.** Every client on that controller carries an empty username, so `--username` is refused by the resolve at exit 1 and the RPC is never reached. Both arms' classification is pinned in `internal/wnc/deauth_test.go` and the re-wording in `internal/cli/deauth_test.go`.
 
-- **Location**: `./tmp/test_data/` directory
-- **Format**: JSON files with descriptive names (e.g., `show_overview_response.json`)
-- **Purpose**: Verify API response structure and enable offline debugging
-
-<details><summary>Example of test data tree structure</summary>
-
-```text
-./tmp/test_data/
-├── show_overview_response.json
-├── show_ap_response.json
-├── show_client_response.json
-├── show_wlan_response.json
-└── generate_token_response.json
-```
-
-</details>
-
-## 📈 Coverage Analysis
-
-The project supports comprehensive test coverage analysis:
-
-### 📊 Coverage Reports
-
-| Output Type     | Command                   | Description                                  |
-| --------------- | ------------------------- | -------------------------------------------- |
-| Terminal Output | `make test-coverage`      | Run tests with coverage analysis.            |
-| HTML Report     | `make test-coverage-html` | Run tests and generate HTML coverage report. |
-
-<details><summary>Example of Coverage Output</summary>
-
-```text
-Coverage report generated at ./tmp/coverage.out
-total: (statements) 67.8%
-
-📦 github.com/umatare5/wnc/cmd (85.7% coverage)
-📦 github.com/umatare5/wnc/internal/application (72.3% coverage)
-📦 github.com/umatare5/wnc/internal/cli (89.1% coverage)
-📦 github.com/umatare5/wnc/internal/config (91.2% coverage)
-📦 github.com/umatare5/wnc/internal/framework (68.5% coverage)
-📦 github.com/umatare5/wnc/internal/infrastructure (45.6% coverage)
-📦 github.com/umatare5/wnc/pkg/cisco (82.3% coverage)
-📦 github.com/umatare5/wnc/pkg/log (95.0% coverage)
-📦 github.com/umatare5/wnc/pkg/tablewriter (78.9% coverage)
-```
-
-</details>
-
-## 🔧 Testing Architecture
-
-This CLI follows a layered testing approach that mirrors its clean architecture:
-
-### 📁 Test Organization
-
-| Layer              | Directory                  | Purpose                                   |
-| ------------------ | -------------------------- | ----------------------------------------- |
-| **Entrypoint**     | `cmd/`                     | Entrypoint of this command-line interface |
-| **Application**    | `internal/application/`    | Business logic and use cases              |
-| **CLI Framework**  | `internal/cli/`            | CLI framework and command definitions     |
-| **Configuration**  | `internal/config/`         | Configuration parsing and validation      |
-| **Framework**      | `internal/framework/`      | Framework adapters and interfaces         |
-| **Infrastructure** | `internal/infrastructure/` | External API communication                |
-| **Packages**       | `pkg/`                     | Reusable utility packages                 |
-
-### 📋 Test Types by Layer
-
-- **Unit Tests**: Focus on individual functions and components
-- **Component Tests**: Test layer interactions and business logic
-- **Integration Tests**: Validate end-to-end functionality with real controllers (located in `internal/cli/`)
-
-## 📚️ Appendix
-
-### 💡 Testing Tips
-
-For efficient testing workflow, start with unit tests and gradually move to integration tests:
-
-1. **Install Dependencies**: `make deps` - Install gotestsum and other development tools.
-2. **Unit Tests First**: `make test-unit` - Ensure basic functionality with enhanced output.
-3. **Code Quality Check**: `make lint` - Run linting to catch potential issues.
-4. **Environment Setup**: Configure environment variables for integration tests.
-5. **Environment Verification**: Test controller connectivity using `wnc show overview`.
-6. **Coverage Analysis**: `make test-coverage` - Run tests with coverage analysis.
-7. **HTML Coverage Report**: `make test-coverage-html` - Generate detailed HTML coverage report.
-8. **Test Data Review**: Examine generated JSON files in `./tmp/test_data/` to understand API responses.
-9. **Integration Tests**: `make test-integration` - Test with real controllers.
-
-> [!TIP]
-> For comprehensive testing, run both `make test-unit` and `make test-integration` sequentially to validate all functionality.
-
-### 🛠️ Development Dependencies
-
-The project uses several tools to enhance the testing experience:
-
-- **gotestsum**: Provides emoji-enhanced, human-readable test output
-- **golangci-lint**: Code linting and static analysis
-- **goreleaser**: Release automation and snapshot builds
-- **air**: Hot reload for development (optional)
-
-> [!Note]
-> Install all dependencies with: `make deps`
-
-### 📖 References
-
-These references provide additional information on Cisco Catalyst 9800 WNC and related technologies:
-
-- 📖 [Cisco Catalyst 9800-CL Wireless Controller for Cloud Deployment Guide](https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/technical-reference/c9800-cl-dg.html)
-  - A comprehensive guide for deploying Cisco Catalyst 9800-CL WNC in cloud environments.
-  - This includes setup instructions, configuration examples, and best practices.
-- 📖 [Cisco Catalyst 9800 Series Wireless Controller Programmability Guide](https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/programmability-guide/b_c9800_programmability_cg/cisco-catalyst-9800-series-wireless-controller-programmability-guide.html)
-  - A guide for programming and automating Cisco Catalyst 9800 WNC.
-  - This includes information on RESTCONF APIs, YANG models, and automation workflows.
-- 📖 [YANG Models and Platform Capabilities for Cisco IOS XE 17.12.1](https://github.com/YangModels/yang/tree/main/vendor/cisco/xe/17121#readme)
-  - A repository containing YANG models and platform capabilities for Cisco IOS XE 17.12.1.
-  - This is useful for understanding the data structures used in the RESTCONF API.
+An administrative state has no arbiter this CLI can compare against. Measured on 17.15.6, a `show running-config all` filtered on the access point's name returns nothing, and per-AP configuration is keyed by dotted MAC rather than by name, so that filter settles nothing either way. Read the state back with `wnc show ap` and `wnc show overview` instead — after an access-point-level disable the two disagree by design, which [enable-disable.md](./commands/enable-disable.md) explains.

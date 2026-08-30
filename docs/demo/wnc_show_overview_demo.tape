@@ -19,7 +19,7 @@ Sleep 4s
 
 Enter
 
-Type "WNC_ACCESS_TOKEN=$(wnc generate token --username wnc --password password)"
+Type "WNC_ACCESS_TOKEN=$(wnc generate-token --username wnc --password password)"
 
 Sleep 1s
 
@@ -29,7 +29,7 @@ Sleep 2s
 
 Enter
 
-Type "export WNC_CONTROLLERS=wnc1.example.internal:$WNC_ACCESS_TOKEN"
+Type "export WNC_CONTROLLER=wnc1.example.internal"
 
 Sleep 1s
 
