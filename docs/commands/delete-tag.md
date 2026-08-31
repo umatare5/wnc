@@ -1,6 +1,6 @@
 # wnc delete policy-tag, site-tag, rf-tag
 
-Delete one tag from a controller. This tree and [set](set-tag.md) are the only commands that write a tag — an access point's [administrative state](enable-disable.md) is the other configuration this CLI writes.
+Delete one tag from a controller.
 
 ```bash
 wnc delete rf-tag --name <name>
@@ -9,21 +9,23 @@ wnc delete policy-tag --name <name>
 ```
 
 ```plaintext
-Delete RF tag lab-rf-inside on 192.168.0.231? [y/N]: y
-RF tag lab-rf-inside on 192.168.0.231: deleted
+Delete RF tag test-rf-inside on WNC1? [y/N]: y
+RF tag test-rf-inside on WNC1: deleted
 ```
 
-## Options
+The counterpart is [set](set-tag.md), which carries the tag-name grammar and what a write can change.
 
-| Option           | Meaning                               |
-| ---------------- | ------------------------------------- |
-| `--name`         | The tag's name, at most 32 characters |
-| `--controller`   | The one controller holding the tag    |
-| `--access-token` | Basic auth token for that controller  |
-| `--insecure`     | Skip TLS certificate verification     |
-| `--timeout`      | Request timeout                       |
-| `--yes`          | Act without the confirmation prompt   |
-| `--dry-run`      | Name the target and change nothing    |
+## Flags
+
+| Option   | Meaning                               |
+| :------- | :------------------------------------ |
+| `--name` | The tag's name, at most 32 characters |
+
+The shared flags are in [`configuration.md`](../configuration.md#flags).
+
+## Columns
+
+This command prints no table.
 
 ## The target
 
@@ -33,35 +35,25 @@ That keeps two answers apart. A name the rule refuses is a usage fault at exit 2
 
 ## Guards
 
-**One tag per invocation.** `--name` names one, and a second occurrence is rejected rather than silently replacing the first.
-
-**One controller per invocation.** A tag is deleted on the controller named, so naming two is a usage fault. Nothing is sent.
-
 **The target is resolved before you are asked.** The controller is read for the name first, so a name it does not hold is reported as such and no delete is sent. Without the read, RESTCONF's own `404` would reach the operator as a status rather than as the plain fact.
 
-**A prompt you cannot answer is a fault.** With stdin piped, `--yes` is required — the run is refused before any request goes out.
-
-**`--dry-run` reads and stops.** It names what would be deleted and writes nothing.
+The rules every write keeps are in [`README.md`](../README.md#acting-on-a-controller).
 
 ## Exit codes
 
-| Code | Meaning                                                |
-| :--- | :----------------------------------------------------- |
-| 0    | The controller accepted the delete, or you answered no |
-| 1    | The controller refused, or holds no tag of that name   |
-| 2    | Usage fault. Nothing was sent to a controller          |
+The five codes are in [`README.md`](../README.md#exit-codes).
+
+Here 1 also means the controller holds no tag of that name.
 
 ## Notes
 
-**A delete is lost on a reload until it is saved.** The record leaves the running configuration and stays in the startup configuration, so a controller that reloads brings the tag back. Measured on all three releases in scope. Run [wnc save-config](save-config.md) to persist the delete.
+- **A delete is lost on a reload** — the tag returns until [`save-config`](save-config.md) persists it
+- **Deleting a tag in use was not measured** — move the access points off it yourself first
+- **A dangling reference is kept, not refused** — silence is not evidence a delete was safe
+- **Read the matching view first** — and [`show ap-tag`](show-ap-tag.md) for the tags in force
+- **A default tag is deletable as far as this knows** — no special rule covers the three
 
-**Deleting a tag an access point resolves to was not measured.** The three configuration modules declare no `leafref` and no `require-instance` on any release measured, so the schema imposes no constraint that would refuse it — but what the controller actually does was not tested, because doing so would have meant deleting a tag in use on the lab. Read `wnc show ap-tag` first and move the access points yourself.
-
-**The controller keeps a dangling reference rather than refusing it.** The access-point-to-tag binding types its tag names as plain strings, and the lab carries live examples of a tag naming a profile that exists nowhere. Absence of a complaint is not evidence that a delete was safe.
-
-**`wnc show policy-tag`, `wnc show site-tag` and `wnc show rf-tag` list the tags that exist.** Read the matching view before a delete, and `wnc show ap-tag` for the ones access points resolve to.
-
-**A default tag is still deletable as far as this command knows.** `default-rf-tag`, `default-site-tag` and `default-policy-tag` are Cisco's preconfigured tags. This command applies no special rule to them.
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 
@@ -69,11 +61,11 @@ Delete a tag nothing resolves to:
 
 ```bash
 wnc show ap-tag -f json | jq -r '.[] | .rf_tag' | sort -u
-wnc delete rf-tag --name lab-rf-retired
+wnc delete rf-tag --name test-rf-retired
 ```
 
 Check the target without acting:
 
 ```bash
-wnc --dry-run delete policy-tag --name lab-wlan
+wnc --dry-run delete policy-tag --name test-wlan
 ```

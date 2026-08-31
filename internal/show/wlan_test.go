@@ -139,8 +139,8 @@ func TestWLANRowsPairsEachWLANWithItsProfiles(t *testing.T) {
 			entryNamed(7, "wlan-unbound"),
 		},
 		Profiles: map[string]wnc.PolicyProfile{
-			"prof-1": {Name: "prof-1", InterfaceName: "LAB-A", CentralSwitching: no()},
-			"prof-2": {Name: "prof-2", Shutdown: true, InterfaceName: "LAB-B"},
+			"prof-1": {Name: "prof-1", InterfaceName: "TEST-A", CentralSwitching: no()},
+			"prof-2": {Name: "prof-2", Shutdown: true, InterfaceName: "TEST-B"},
 		},
 		Bindings: []wnc.Binding{
 			{Tag: "tag-1", WLANProfile: "wlan-a", Policy: "prof-1"},

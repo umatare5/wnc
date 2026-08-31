@@ -7,16 +7,20 @@ wnc show ap-tag
 ```
 
 ```plaintext
-AP Name    AP MAC             Misconfigured  Misconfig Reason  Tag Source  Filter Name  Policy Tag      Site Tag        RF Tag        AP Profile   Flex Profile  Controller
-TEST-AP01  aa:bb:cc:dd:ee:ff  No             -                 Static      -            labo-wlan-flex  labo-site-flex  labo-inside   labo-common  labo-flex     192.168.0.231
-TEST-AP02  aa:bb:cc:dd:ee:ff  No             -                 Static      -            labo-wlan-flex  labo-site-flex  labo-outside  labo-common  labo-flex     192.168.0.231
-TEST-AP03  aa:bb:cc:dd:ee:ff  No             -                 Static      -            labo-wlan-flex  labo-site-flex  labo-inside   labo-common  labo-flex     192.168.0.231
+AP Name    AP MAC             Misconfigured  Misconfig Reason  Tag Source  Filter Name  Policy Tag      Site Tag        RF Tag        AP Profile         Flex Profile         Controller
+TEST-AP01  00:00:5e:00:53:01  No             -                 Static      -            test-wlan-flex  test-site-flex  test-inside   test-ap-profile01  test-flex-profile01  WNC1
+TEST-AP02  00:00:5e:00:53:02  No             -                 Static      -            test-wlan-flex  test-site-flex  test-outside  test-ap-profile01  test-flex-profile01  WNC1
+TEST-AP03  00:00:5e:00:53:03  No             -                 Static      -            test-wlan-flex  test-site-flex  test-inside   test-ap-profile01  test-flex-profile01  WNC1
 ```
+
+## Flags
+
+The shared flags are in [`configuration.md`](../configuration.md#flags).
 
 ## Columns
 
 | Field              | Meaning                                                             |
-| ------------------ | ------------------------------------------------------------------- |
+| :----------------- | :------------------------------------------------------------------ |
 | `ap_name`          | Access point name                                                   |
 | `ap_mac`           | Base radio address, as `show ap tag summary` names it               |
 | `misconfigured`    | Whether the controller flags the tag assignment as broken           |
@@ -32,19 +36,13 @@ TEST-AP03  aa:bb:cc:dd:ee:ff  No             -                 Static      -    
 
 ## Notes
 
-**The three tags are the resolved ones — what is in force.** The controller also publishes the configured tags, which differ whenever the source is not Static.
+- **These are the resolved tags** — the configured ones differ unless `tag_source` is Static
+- **The two profiles come from the configured site tag** — no resolved form of either exists
+- **So the profiles match Site Tag under Static alone** — any other source can leave them apart
+- **A dash in `misconfig_reason` is not "none"** — the domain's own member for that renders `None`
+- **This view is the outcome** — the three tag views hold a tag that is bound to nothing
 
-**The two profiles are not resolved, because no resolved form exists.** The schema publishes no resolved counterpart of either on any release measured, so both come from the configured site tag. They describe the same site tag as the Site Tag column only while the configured and resolved site tags agree — which is exactly when `tag_source` is Static.
-
-**`misconfigured` shows `-` when the controller said nothing.** On 17.12 it sends an explicit `false` for a healthy access point, so `No` there is a reading and not a substitute for silence.
-
-**`misconfig_reason` has been seen carrying only the domain's "no misconfiguration" member.** The leaf appears at 17.15 — present on 3 of 3 records on 17.15.6 — and its domain grows from three members to four at 17.18, while 17.12 does not declare it. The display strings come from the model's own descriptions rather than from the device CLI, which prints no heading for this quantity at all.
-
-**A dash in `misconfig_reason` is not "no misconfiguration".** The domain has its own member for that, `apmgr-no-misconfig`, rendered `None`. A dash means the release did not report the leaf.
-
-**`filter_name` is empty unless a filter assigned the tags.** The controller sends an empty string where no filter exists — measured on 17.12.8, present on 3 of 3 records with no `ap-filter-configs` configured — so the cell reads `-` for the same reason an absent leaf does: there is no filter name to report.
-
-**This view is the outcome and the three tag views are the definitions.** It reports which tags are in force on an access point and cannot report a tag that exists and is bound to nothing — which is the tag a delete is usually aimed at. `wnc show policy-tag`, `wnc show site-tag` and `wnc show rf-tag` read the three configuration lists that `wnc set` and `wnc delete` write.
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 

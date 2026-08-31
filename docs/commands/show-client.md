@@ -7,26 +7,26 @@ wnc show client
 ```
 
 ```plaintext
-MAC                IPv4        IPv6          Device          Username  SSID         AP Name    Slot  Band  Protocol  Channel  State           RSSI    SNR   Rate     Streams  Assoc  Rx        Tx       Controller
-00:00:5e:00:53:11  192.0.2.11  2001:db8::11  Example Vendor  -         labo-p736b2  TEST-AP03  0     2.4   11ax      6ch      Run             -21dBm  78dB  143Mbps  1ss      2h15m  17.0MiB   19.6MiB  192.168.0.231
-00:00:5e:00:53:12  192.0.2.12  -             Example Phone   lab-user  labo-p736b5  TEST-AP01  1     5     11ac      64ch     Run             -43dBm  56dB  866Mbps  2ss      17m    107.9KiB  30.7KiB  192.168.0.231
-00:00:5e:00:53:13  192.0.2.13  -             Example Sensor  -         labo-t6c73d  TEST-AP03  2     6     11be      5ch      Authenticating  -55dBm  40dB  -        -        42s    -         -        192.168.0.231
+MAC                IPv4          IPv6          Device          Username   SSID          AP Name    Slot  Band  Protocol  Channel  State           RSSI    SNR   Rate     Streams  Assoc  Rx        Tx       Controller
+00:00:5e:00:53:a1  192.168.0.21  2001:db8::11  Example Vendor  -          test-essid01  TEST-AP03  0     2.4   11ax      6ch      Run             -21dBm  78dB  143Mbps  1ss      2h15m  17.0MiB   19.6MiB  WNC1
+00:00:5e:00:53:a2  192.168.0.22  -             Example Phone   test-user  test-essid02  TEST-AP01  1     5     11ac      64ch     Run             -43dBm  56dB  866Mbps  2ss      17m    107.9KiB  30.7KiB  WNC1
+00:00:5e:00:53:a3  192.168.0.23  -             Example Sensor  -          test-essid03  TEST-AP03  2     6     11be      5ch      Authenticating  -55dBm  40dB  -        -        42s    -         -        WNC1
 ```
 
-## Options
-
-Beyond the shared `show` options:
+## Flags
 
 | Option          | Meaning                                |
-| --------------- | -------------------------------------- |
+| :-------------- | :------------------------------------- |
 | `--radio`, `-r` | Keep only clients on `2.4`, `5` or `6` |
 | `--ssid`, `-s`  | Keep only clients on this SSID         |
 | `--ap-name`     | Keep only clients on this access point |
 
+The shared flags are in [`configuration.md`](../configuration.md#flags).
+
 ## Columns
 
 | Field             | Meaning                                                       |
-| ----------------- | ------------------------------------------------------------- |
+| :---------------- | :------------------------------------------------------------ |
 | `mac`             | Client address                                                |
 | `ipv4`            | IPv4 address from the binding table                           |
 | `ipv6`            | Lowest global IPv6 address from the binding table             |
@@ -50,23 +50,14 @@ Beyond the shared `show` options:
 
 ## Notes
 
-**`device` is a classification label, not a hostname.** The controller assigns it from traffic analysis, so the same value covers many clients. The leaf that does carry a hostname sits on a list this CLI cannot reach and which answers with no content, so it is not offered.
+- **`device` is a classification label** — the leaf carrying a hostname answers with no content
+- **Band and protocol are separate** — the device pairs them, so neither can be sorted there
+- **One IPv6 of up to eight** — link-local dropped, the rest compared as numbers not as text
+- **A zero is a reading only where zero is possible** — `0dB` is a margin, channel 0 an omission
+- **`snr_db` reads a collection of its own** — a client with no row has no margin, not zero
+- **A filter over a failed read prints nothing** — zero matches would claim an empty fleet
 
-**`band` and `protocol` are two different facts.** The band says which radio the client is on and the protocol says which PHY generation it negotiated. The controller's own `show wireless client summary` pairs them as `11n(2.4)` — here they are separate columns so either can be filtered and sorted.
-
-**`username` is `-` for an unauthenticated client.** The controller sends the key with an empty value rather than omitting it, so an empty username is reported as unreported.
-
-**`ipv6` is one address chosen from up to eight.** Link-local addresses are dropped because every client has one and it identifies nothing, and the remaining addresses are compared numerically. The controller compresses some entries and not others, so a textual comparison would return a different address between polls.
-
-**A zero is a reading only where zero is possible.** `snr_db` of 0 is a real margin and is shown as `0dB` — a channel, a rate, a stream count and an RSSI of exactly 0 are omissions and show `-`.
-
-**`snr_db` is `-` when the traffic counters carried no row for the client.** The margin is read from a collection of its own, so a client the controller lists without one has no SNR to report rather than a margin of zero.
-
-**The unit sits in the table and never in the JSON.** It is glued to the number so each cell stays one field for `awk` and `cut`, and an unreported value shows a bare `-` rather than a unit with nothing in front of it. Sorting reads the number, so `--sort-by channel` puts channel 6 before channel 11 rather than ordering the text.
-
-**`assoc_seconds` is `-` when the controller reported no instant.** Several sibling timestamps on the same read return the Unix epoch to mean that, and an age computed from it would read as fifty-six years.
-
-**A filter reading from a collection that failed produces no rows for that controller.** Reporting zero matches instead would claim the fleet holds no such client, when the truth is that nothing was read.
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 
@@ -85,7 +76,7 @@ wnc show client -f json | jq -r '.[] | select(.state != "Run") | "\(.mac) \(.sta
 The 6 GHz clients on one SSID:
 
 ```bash
-wnc show client -r 6 -s labo-t6c73d
+wnc show client -r 6 -s test-essid03
 ```
 
 The heaviest talkers:

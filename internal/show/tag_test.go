@@ -14,14 +14,14 @@ import (
 func TestPolicyTagRowsExpandOverTheBindings(t *testing.T) {
 	t.Parallel()
 
-	desc := "lab flex"
+	desc := "test flex"
 	tags := []wnc.PolicyTag{
 		{
-			Name:        "labo-wlan-flex",
+			Name:        "test-wlan-flex",
 			Description: &desc,
 			Bindings: []wnc.PolicyBinding{
-				{WLANProfile: "labo-p736b2", PolicyProfile: "labo-wlan-profile"},
-				{WLANProfile: "labo-p736b5", PolicyProfile: "labo-wlan-profile"},
+				{WLANProfile: "test-wlan-profile01", PolicyProfile: "test-policy-profile01"},
+				{WLANProfile: "test-wlan-profile02", PolicyProfile: "test-policy-profile01"},
 			},
 		},
 		{Name: "default-policy-tag"},
@@ -34,17 +34,17 @@ func TestPolicyTagRowsExpandOverTheBindings(t *testing.T) {
 	}
 
 	first := cellsOf(PolicyTagColumns(), rows[0])
-	if first["policy_tag"] != "labo-wlan-flex" || first["wlan"] != "labo-p736b2" {
+	if first["policy_tag"] != "test-wlan-flex" || first["wlan"] != "test-wlan-profile01" {
 		t.Errorf("first row = %+v", first)
 	}
 
-	if first["policy_profile"] != "labo-wlan-profile" || first["description"] != "lab flex" {
+	if first["policy_profile"] != "test-policy-profile01" || first["description"] != "test flex" {
 		t.Errorf("first row = %+v", first)
 	}
 
 	// The description repeats on every row of one tag: each row is a whole reading of the
 	// tag, so a consumer filtering the JSON on one binding keeps it.
-	if got := cellsOf(PolicyTagColumns(), rows[1])["description"]; got != "lab flex" {
+	if got := cellsOf(PolicyTagColumns(), rows[1])["description"]; got != "test flex" {
 		t.Errorf("second row description = %q", got)
 	}
 
@@ -66,7 +66,7 @@ func TestTagRowsCollapseAReportedEmptyString(t *testing.T) {
 	t.Parallel()
 
 	empty := ""
-	rows := policyTagRows([]wnc.PolicyTag{{Name: "labo-empty", Description: &empty}}, target)
+	rows := policyTagRows([]wnc.PolicyTag{{Name: "test-empty", Description: &empty}}, target)
 
 	if got := cellsOf(PolicyTagColumns(), rows[0])["description"]; got != render.Absent {
 		t.Errorf("an empty description rendered %q, want %q", got, render.Absent)
@@ -89,13 +89,13 @@ func TestSiteTagRowsKeepTheThreeLocalSiteReadings(t *testing.T) {
 	t.Parallel()
 
 	yes, no := true, false
-	flex := "labo-flex"
-	join := "labo-common"
+	flex := "test-flex-profile01"
+	join := "test-ap-profile01"
 
 	tags := []wnc.SiteTag{
-		{Name: "labo-site-flex", APJoinProfile: &join, FlexProfile: &flex, LocalSite: &no},
+		{Name: "test-site-flex", APJoinProfile: &join, FlexProfile: &flex, LocalSite: &no},
 		{Name: "default-site-tag", LocalSite: &yes},
-		{Name: "labo-bare"},
+		{Name: "test-bare"},
 	}
 
 	rows := siteTagRows(tags, target)
@@ -125,7 +125,7 @@ func TestSiteTagLocalSiteTakesNoGlyph(t *testing.T) {
 	t.Parallel()
 
 	yes := true
-	rows := siteTagRows([]wnc.SiteTag{{Name: "labo-site", LocalSite: &yes}}, target)
+	rows := siteTagRows([]wnc.SiteTag{{Name: "test-site", LocalSite: &yes}}, target)
 
 	if got := prettyOf(SiteTagColumns(), rows[0])["local_site"]; got != "Yes" {
 		t.Errorf("bordered local_site = %q, want the plain cell", got)
@@ -139,9 +139,9 @@ func TestRFTagRowsAbsenceRules(t *testing.T) {
 
 	tags := []wnc.RFTag{
 		{
-			Name: "labo-inside", Description: ptr("lab inside"),
-			Profile24GHz: ptr("labo-rf-24gh"), Profile5GHz: ptr("labo-rf-5gh"),
-			Profile6GHz: ptr("labo-rf-6gh"),
+			Name: "test-inside", Description: ptr("test inside"),
+			Profile24GHz: ptr("test-rf-profile01"), Profile5GHz: ptr("test-rf-profile02"),
+			Profile6GHz: ptr("test-rf-profile05"),
 		},
 		{Name: "default-rf-tag"},
 	}
@@ -149,7 +149,7 @@ func TestRFTagRowsAbsenceRules(t *testing.T) {
 	rows := rfTagRows(tags, target)
 
 	first := cellsOf(RFTagColumns(), rows[0])
-	if first["profile_24ghz"] != "labo-rf-24gh" || first["profile_5ghz"] != "labo-rf-5gh" {
+	if first["profile_24ghz"] != "test-rf-profile01" || first["profile_5ghz"] != "test-rf-profile02" {
 		t.Errorf("first row = %+v", first)
 	}
 
@@ -211,7 +211,7 @@ func TestTagRowsOmitEveryAbsentColumnFromTheJSON(t *testing.T) {
 		{
 			name: "policy-tag, everything reported empty",
 			rows: policyTagRows([]wnc.PolicyTag{{
-				Name: "labo-empty", Description: &empty,
+				Name: "test-empty", Description: &empty,
 				Bindings: []wnc.PolicyBinding{{}},
 			}}, target),
 			keep: []string{"policy_tag", "controller"},
@@ -219,14 +219,14 @@ func TestTagRowsOmitEveryAbsentColumnFromTheJSON(t *testing.T) {
 		},
 		{
 			name: "site-tag, everything omitted",
-			rows: siteTagRows([]wnc.SiteTag{{Name: "labo-bare"}}, target),
+			rows: siteTagRows([]wnc.SiteTag{{Name: "test-bare"}}, target),
 			keep: []string{"site_tag", "controller"},
 			drop: []string{"description", "ap_join_profile", "flex_profile", "local_site"},
 		},
 		{
 			name: "site-tag, every string reported empty",
 			rows: siteTagRows([]wnc.SiteTag{{
-				Name: "labo-empty", Description: &empty, APJoinProfile: &empty, FlexProfile: &empty,
+				Name: "test-empty", Description: &empty, APJoinProfile: &empty, FlexProfile: &empty,
 			}}, target),
 			keep: []string{"site_tag", "controller"},
 			drop: []string{"description", "ap_join_profile", "flex_profile"},
@@ -268,24 +268,28 @@ func TestTagRowsOmitEveryAbsentColumnFromTheJSON(t *testing.T) {
 func TestTagRowsKeepEveryReportedColumnInTheJSON(t *testing.T) {
 	t.Parallel()
 
-	flex, join := "labo-flex", "labo-common"
+	flex, join := "test-flex-profile01", "test-ap-profile01"
 	local := false
 
 	policy := policyTagRows([]wnc.PolicyTag{{
-		Name:     "labo-wlan-flex",
-		Bindings: []wnc.PolicyBinding{{WLANProfile: "labo-p736b2", PolicyProfile: "labo-wlan-profile"}},
+		Name:     "test-wlan-flex",
+		Bindings: []wnc.PolicyBinding{{WLANProfile: "test-wlan-profile01", PolicyProfile: "test-policy-profile01"}},
 	}}, target)
 
 	site := siteTagRows([]wnc.SiteTag{{
-		Name: "labo-site-flex", APJoinProfile: &join, FlexProfile: &flex, LocalSite: &local,
+		Name: "test-site-flex", APJoinProfile: &join, FlexProfile: &flex, LocalSite: &local,
 	}}, target)
 
-	rf := rfTagRows([]wnc.RFTag{{Name: "labo-inside", Profile5GHz: ptr("labo-rf-5gh")}}, target)
+	rf := rfTagRows([]wnc.RFTag{{Name: "test-inside", Profile5GHz: ptr("test-rf-profile02")}}, target)
 
 	tests := map[string][]string{
-		mustMarshal(t, policy): {`"wlan":"labo-p736b2"`, `"policy_profile":"labo-wlan-profile"`},
-		mustMarshal(t, site):   {`"ap_join_profile":"labo-common"`, `"flex_profile":"labo-flex"`, `"local_site":false`},
-		mustMarshal(t, rf):     {`"profile_5ghz":"labo-rf-5gh"`},
+		mustMarshal(t, policy): {`"wlan":"test-wlan-profile01"`, `"policy_profile":"test-policy-profile01"`},
+		mustMarshal(t, site): {
+			`"ap_join_profile":"test-ap-profile01"`,
+			`"flex_profile":"test-flex-profile01"`,
+			`"local_site":false`,
+		},
+		mustMarshal(t, rf): {`"profile_5ghz":"test-rf-profile02"`},
 	}
 
 	for body, wants := range tests {

@@ -1,9 +1,9 @@
 # Troubleshooting
 
-A read that fails is logged to stderr as one line carrying a `cause` field, and the sections below are indexed by it. A usage fault and a refusal from a command that acts carry no such field: they are one `wnc: …` line, indexed here by its wording.
+A failed read carries a `cause=` token and a refusal is one `wnc: …` line — the sections below index both.
 
 ```plaintext
-error: 192.168.0.231: the controller answered 401 Unauthorized (cause=auth)
+error: WNC1: the controller answered 401 Unauthorized (cause=auth)
 ```
 
 The controller leads the sentence, and `endpoint=` joins the cause inside the parentheses when the failure cost only some cells rather than the whole row set.
@@ -13,8 +13,8 @@ The controller leads the sentence, and `endpoint=` joins the cause inside the pa
 `--log-level debug` renders the same record as logfmt, makes the controller a field of its own, adds the HTTP status beside it, and is where the Go error itself appears — as the SDK's own record, one line earlier:
 
 ```plaintext
-level=debug msg="HTTP request failed" error="Get \"https://192.0.2.1/restconf/data/...\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)" url="https://192.0.2.1/restconf/data/..."
-level=error msg="the controller did not answer in time" cause=timeout controller=192.0.2.1 status=0
+level=debug msg="HTTP request failed" error="Get \"https://192.168.0.1/restconf/data/...\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)" url="https://192.168.0.1/restconf/data/..."
+level=error msg="the controller did not answer in time" cause=timeout controller=WNC1 status=0
 ```
 
 The fatal line names no endpoint because it does not have to: each view has exactly one read it cannot proceed without, so the command names it. A read that cost only some cells is reported separately and carries `endpoint=`.
@@ -43,11 +43,11 @@ The controller has no such node. This is normal on a release that dropped a leaf
 
 No answer within `--timeout`, which defaults to 60 seconds per request.
 
-**A failure at 30 seconds is the connect stage, and `--timeout` does not move it.** The SDK pins the dialer at 30 seconds and exports no option for it — measured, `--timeout 60s` and `--timeout 120s` both give up at 30 against an unroutable address. So a run that fails at 30 seconds every time has no route, and raising the flag will not change the outcome.
+**A failure at 30 seconds is the connect stage, and `--timeout` does not move it.** The SDK pins the dialer there and exports no option for it, so a run that fails at 30 every time has no route and raising the flag changes nothing.
 
 The wall-clock ceiling for one controller is the timeout multiplied by the number of sequential reads the command makes — five for `show overview` and `show client`, three for `show ap` and `show wlan`, one for every other view. Controllers are read concurrently, so adding one does not extend the ceiling.
 
-`wnc save-config` is the one command a read-sized timeout refuses. It took 2.5s to 3.7s on every release measured, against about 0.13s for a container read, so a `--timeout` that every view survives can still fail the save.
+`wnc save-config` is the one command a read-sized timeout refuses, and [its page](commands/save-config.md) carries the timing.
 
 A controller under load answers a whole-container read slowly. Raise the timeout before suspecting the network:
 
@@ -57,7 +57,14 @@ wnc show client --timeout 120s
 
 ## cause=tls
 
-The certificate did not verify. See [`SECURITY.md`](./SECURITY.md#trusting-a-private-certificate-authority) for trusting the issuer, which is preferable to `--insecure`.
+The certificate did not verify. A controller usually presents a self-signed or internally-issued certificate, and trusting its issuer is preferable to `--insecure`, which accepts an interception as readily as a private authority:
+
+```bash
+SSL_CERT_FILE=/path/to/ca-bundle.pem wnc show overview
+```
+
+> [!IMPORTANT]
+> On macOS and Windows, Go 1.27 changed what this does: setting `SSL_CERT_FILE` or `SSL_CERT_DIR` now replaces the platform verifier rather than adding to it, so the file becomes the only trust root the process has. macOS has no default path for either variable, so nothing is inherited — point it at a bundle carrying every root the process needs, which for this CLI is just the controller's issuer. `GODEBUG=x509sslcertoverrideplatform=0` restores the platform verifier and makes both variables inert again. On Linux the variable overrides the default bundle location, and the same rule applies.
 
 ## cause=connection
 
@@ -87,27 +94,27 @@ A fault in the CLI rather than in the exchange. Re-run with `--log-level debug`,
 
 ## Everything shows `-`
 
-`-` means the controller reported nothing for that cell, which is not the same as zero. A Monitor radio has no channel, an unauthenticated client has no username, and a WLAN with no policy tag bound has no interface. If a whole column is `-` and you expect values, look for an `endpoint=` line: a secondary read that failed leaves exactly its own columns empty.
+`-` is the controller reporting nothing, which [`README.md`](README.md#output) separates from zero. If a whole column is `-` and you expect values, look for an `endpoint=` line: a secondary read that failed leaves exactly its own columns empty.
 
 ## The row set is smaller than expected
 
 Two commands hide entries on purpose:
 
-- `show overview` omits a remote-LAN port, which the controller reports among the radios but which has no RF
-- `show wlan` omits a policy-tag binding whose WLAN profile does not exist, and reports the count as a warning
+- **A remote-LAN port** — `show overview` drops it, the controller listing it among the radios with no RF
+- **A dangling policy-tag binding** — `show wlan` drops it and reports the count as a warning
 
 `show client -r` and `show overview -r` report how many rows they dropped because the controller reported no band for them. The `--ssid` and `--ap-name` filters report no such count.
 
 ## Exit code 3 with a full table
 
-At least one read failed while at least one succeeded. The table holds everything that was read — the stderr lines say what was not.
+At least one read failed while at least one succeeded, which [`README.md`](README.md#exit-codes) sets out. The stderr lines say which.
 
 ## A command that acts says the controller holds no access point of that name
 
-The name is resolved against the controller before anything is sent, through `ap-name-mac-map`, which is keyed on the access point's name and answers 404 for a name no access point holds. Every leaf of `reset`, `enable` and `disable` resolves its target through that read, so all six answer this way. Two things produce it, and `wnc show ap-join` separates them.
+Every leaf of `reset`, `enable` and `disable` resolves its target on the controller before anything is sent, as [`reset-ap.md`](commands/reset-ap.md#the-target) sets out, so all six answer this way. Two things produce it, and `wnc show ap-join` separates them.
 
-- The access point is on another controller, so name that one with `--controller`
-- The name is not the one the controller holds — take it from the `ap_name` column of `wnc show ap`
+- **Another controller holds it** — name that one with `--controller`
+- **The name is not the controller's** — take it from the `ap_name` column of `wnc show ap`
 
 ## `enable radio` or `disable radio` says the controller reports no radio address for it
 
@@ -115,27 +122,27 @@ Different from the message above: the controller does hold that access point and
 
 ## `enable radio` or `disable radio` says the controller holds no radio in that slot
 
-The keyed read of `radio-oper-data` returned nothing for that slot. Read the `Slot` column of `wnc show overview` for the slots that exist — measured on 17.15.6, `--slot 3` against an access point with two radios exits 1, which is what separates it from the usage faults that exit 2 having read nothing.
+The keyed read of `radio-oper-data` returned nothing for that slot. Read the `Slot` column of `wnc show overview` for the slots that exist — this exits 1 rather than 2, because the controller answered before the slot was refused.
 
 ## `enable radio` or `disable radio` says the slot is a remote-LAN port
 
-The controller lists a remote-LAN port among the radios and it carries neither a band nor an admin state, so there is nothing to set. `wnc show overview` drops such an entry rather than printing a row of dashes, which is why the slot appears in no table.
+The port carries neither a band nor an admin state, so there is nothing to set. `wnc show overview` drops it rather than printing a row of dashes, which is why the slot appears in no table.
 
 ## `enable radio` or `disable radio` says the RPC has no band number for a radio type
 
-The number the RPC takes follows the radio type, and its domain holds four members. A slot reporting `radio-uwb`, `radio-invalid`, `radio-80211-xor-24-6ghz` — which fits both the dual-band 3 and the 6 GHz 4 — or a spelling a later release adds is refused rather than given a guessed number, because a wrong number reaches a radio the operator did not name. A record carrying no `radio-type` at all is refused separately, with `reports no radio type for slot <n>`.
+The spelling the controller reported has no band number this CLI will guess at, because a wrong number reaches a radio the operator did not name. A record carrying no `radio-type` at all is refused separately, with `reports no radio type for slot <n>`.
 
 ## `enable radio` or `disable radio` says the band is unknown or unreported
 
-That refusal is about the prompt rather than the wire. The band the prompt names is the one the radio is serving, and it is what an operator checks against the `Band` column of `wnc show overview` before answering — so a radio the controller reports no serving band for is refused even where the RPC has a number for it. Two messages cover it: `reports no band for slot <n>` where the leaf was absent, and `reports slot <n> of <ap> on an unknown band (<spelling>)` where it carried a spelling outside 2.4, 5 and 6 GHz.
+That refusal is about the prompt rather than the wire: a radio the controller reports no serving band for is refused even where the RPC has a number for it. Two messages cover it: `reports no band for slot <n>` where the leaf was absent, and `reports slot <n> of <ap> on an unknown band (<spelling>)` where it carried a spelling outside 2.4, 5 and 6 GHz.
 
 ## `enable radio` or `disable radio` says the radio is accepted on other slots only
 
-The RPC's own `must` clause pairs each band number with a slot range: 1 on slot 0, 2 on slot 1 or 2, 3 on slot 0 or 2, and 4 on slot 2 or 3. Measured on 17.15.6, band 1 with slot 1 answers `400` naming that clause, so the CLI refuses the pair instead of sending it. The range follows the radio type and does not move when a dual-band radio changes the band it serves, so read the `Slot` column of `wnc show overview` and not its `Band` column to predict this one.
+The RPC's own `must` clause forbids that band-and-slot pair, so the CLI refuses it instead of sending it. The pair follows the radio type and not the band a dual-band radio is serving, so read the `Slot` column of `wnc show overview` and not its `Band` column to predict this one — [`enable-disable.md`](commands/enable-disable.md) carries why.
 
 ## A command that acts refuses a piped stdin
 
-There is no terminal to answer the prompt on, so nothing was sent. Pass `--yes` to act, or `--dry-run` to name the target and stop. This covers every leaf of `reset`, `enable`, `disable`, `set` and `delete`, and `save-config` and `deauth` as well.
+There is no terminal to answer the prompt on, so nothing was sent. Every command that acts refuses it, and [`README.md`](README.md#acting-on-a-controller) carries the two flags that answer it.
 
 ## `set` says the tag exists and there is nothing to change
 
@@ -147,7 +154,7 @@ The name was read before the delete, and the controller does not have it. Tag na
 
 ## A tag write is refused with 400
 
-The controller rejected the payload. The commonest cause is a name the device's own pattern refuses, but the CLI checks that first, so a 400 that reaches you is usually a binding the release does not accept. Read the node back to see what it holds:
+The controller rejected the payload. The CLI checks the name's own pattern first, so a 400 that reaches you is usually a binding the release does not accept. Read the node back to see what it holds:
 
 ```bash
 curl -kisS -H "Authorization: Basic $WNC_ACCESS_TOKEN" \
@@ -155,23 +162,23 @@ curl -kisS -H "Authorization: Basic $WNC_ACCESS_TOKEN" \
         "https://<host>/restconf/data/Cisco-IOS-XE-wireless-rf-cfg:rf-cfg-data/rf-tags/rf-tag=<name>"
 ```
 
-A profile name that exists nowhere is **not** a cause: the configuration modules declare no `leafref`, so the controller accepts a dangling reference and keeps it.
+A profile name that exists nowhere is **not** a cause — the controller keeps a dangling reference, which [`set-tag.md`](commands/set-tag.md) explains.
 
 ## `save-config` says the controller reported no result
 
-The controller answered the save but carried no `result` string, which is its whole account of what it did. Six posts across 17.12.8, 17.15.6 and 17.18.4a each returned `Save running-config successful`, so an answer without one is a shape no release produced, and reporting a save that may not have happened is the one answer this command must not give.
+The controller answered the save but carried no `result` string, which is its whole account of what it did. No release in scope has produced that shape, and reporting a save that may not have happened is the one answer this command must not give.
 
-Whether the configuration was in fact saved is readable on the controller itself: `show running-config` heads its output with `Last configuration change` and `NVRAM config last updated`, and a running timestamp newer than the NVRAM one means there is still something to save.
+Whether the configuration was in fact saved is readable on the controller itself, which [`save-config.md`](commands/save-config.md) shows.
 
 ## A command says it takes no positional arguments
 
-Every value a subcommand takes is named by a flag, so a bare word is a fault wherever it lands. The message reports how many were given and never repeats them — a leftover word on `generate-token` can be the password a wrapper misplaced. Nothing was sent.
+Every value a command takes is named by a flag, so a bare word is a fault wherever it lands. The message reports how many were given and never repeats them — a leftover word on `generate-token` can be the password a wrapper misplaced. Nothing was sent.
 
 Where the leaf has a target flag the message names it: `use --ap-name` on the six leaves of `reset`, `enable` and `disable`, `use --name` on the six of `set` and `delete`, and `use --mac` on `deauth`. `wnc show client` takes `--ap-name` as a filter, so it names that one too. Elsewhere `--help` lists the flag the value belonged to.
 
 ## A tag name is refused for a leading or trailing space
 
-The key leaf's own pattern refuses one, and the name now reaches that check with its spaces intact: a flag value is not trimmed, where a positional argument was. Quote what you meant, or drop the padding — an inner space is legal and passes.
+The key leaf's own pattern refuses one, and a flag value reaches that check with its spaces intact. Quote what you meant, or drop the padding — an inner space is legal and passes.
 
 ## A message ends with `see 'wnc … --help'`
 

@@ -32,8 +32,8 @@ func TestTableIsBorderless(t *testing.T) {
 
 	zero, note := 0, "ok"
 	rows := []row{
-		{Name: "lab-ap-1", Count: &zero, Note: &note},
-		{Name: "lab-ap-2"},
+		{Name: "TEST-AP01", Count: &zero, Note: &note},
+		{Name: "TEST-AP02"},
 	}
 
 	var buf bytes.Buffer
@@ -382,9 +382,9 @@ func TestPrettyTable(t *testing.T) {
 	}
 
 	rows := []row{
-		{Name: "lab-ap-1", Wide: "Tokyo", State: strPtr("Up")},
-		{Name: "lab-ap-2", Wide: "Osaka", State: strPtr("Down")},
-		{Name: "lab-ap-3", Wide: "", State: nil},
+		{Name: "TEST-AP01", Wide: "Tokyo", State: strPtr("Up")},
+		{Name: "TEST-AP02", Wide: "Osaka", State: strPtr("Down")},
+		{Name: "TEST-AP03", Wide: "", State: nil},
 	}
 
 	var pretty, plain bytes.Buffer
@@ -440,14 +440,14 @@ func TestPrettyTableFallsBackToCell(t *testing.T) {
 	type row struct{ Name string }
 
 	cols := []Column[row]{{Key: "name", Header: "Name", Cell: func(r row) string { return Str(r.Name) }}}
-	rows := []row{{Name: "lab-ap-1"}}
+	rows := []row{{Name: "TEST-AP01"}}
 
 	var buf bytes.Buffer
 	if err := PrettyTable(&buf, cols, rows); err != nil {
 		t.Fatalf("PrettyTable: %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "lab-ap-1") {
+	if !strings.Contains(buf.String(), "TEST-AP01") {
 		t.Errorf("a column with no Pretty rendering lost its cell:\n%s", buf.String())
 	}
 }

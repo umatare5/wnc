@@ -18,10 +18,10 @@ func newRejectingDeauthStub(t *testing.T) string {
 
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		switch path.Base(req.URL.Path) {
-		case "common-oper-data=" + labClientMAC:
+		case "common-oper-data=" + testClientMAC:
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(`{"Cisco-IOS-XE-wireless-client-oper:common-oper-data":[` +
-				`{"client-mac":"` + labClientRowMAC + `","co-state":"client-status-run"}]}`))
+				`{"client-mac":"` + testClientRowMAC + `","co-state":"client-status-run"}]}`))
 		case "common-oper-data":
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(clientCollection))
@@ -47,19 +47,19 @@ func TestDeauthRefusesBeforeContactingAnything(t *testing.T) {
 		{name: "no target", args: nil, mentions: "requires --mac or --username"},
 		{
 			name:     "two addresses",
-			args:     []string{"--mac", labClientMAC, "--mac", "00:00:5e:00:53:0b"},
+			args:     []string{"--mac", testClientMAC, "--mac", "00:00:5e:00:53:a2"},
 			mentions: "one client per invocation, --mac given 2 times",
 		},
 		{
 			name:     "two usernames",
-			args:     []string{"--username", labClientUsername, "--username", labSharedUsername},
+			args:     []string{"--username", testClientUsername, "--username", testSharedUsername},
 			mentions: "one username per invocation, --username given 2 times",
 		},
 		{
 			// The RPC's choice is mandatory and the controller resolves the first arm it finds,
 			// so sending both would let the controller pick which one the operator meant.
 			name:     "both arms",
-			args:     []string{"--mac", labClientMAC, "--username", labClientUsername},
+			args:     []string{"--mac", testClientMAC, "--username", testClientUsername},
 			mentions: "one invocation gives one of them",
 		},
 		{
@@ -76,26 +76,26 @@ func TestDeauthRefusesBeforeContactingAnything(t *testing.T) {
 		},
 		{
 			name:     "no controller",
-			args:     []string{"--mac", labClientMAC},
+			args:     []string{"--mac", testClientMAC},
 			mentions: "no controller given",
 		},
 		{
 			name: "two controllers",
 			args: []string{
-				"--mac", labClientMAC, "-c", "192.0.2.1", "-c", "192.0.2.2",
+				"--mac", testClientMAC, "-c", "192.0.2.1", "-c", "192.0.2.2",
 				"--access-token", fakeToken,
 			},
 			mentions: "acts on one controller",
 		},
 		{
 			name:     "a pipe that could not answer the prompt",
-			args:     []string{"--mac", labClientMAC, "-c", "192.0.2.1", "--access-token", fakeToken},
+			args:     []string{"--mac", testClientMAC, "-c", "192.0.2.1", "--access-token", fakeToken},
 			piped:    true,
 			mentions: "stdin is not a terminal",
 		},
 		{
 			name:     "a positional instead of a flag",
-			args:     []string{labClientMAC, "-c", "192.0.2.1", "--access-token", fakeToken},
+			args:     []string{testClientMAC, "-c", "192.0.2.1", "--access-token", fakeToken},
 			mentions: "takes no positional arguments, 1 given: use --mac",
 		},
 	}
@@ -127,7 +127,7 @@ func TestDeauthRefusesBeforeContactingAnything(t *testing.T) {
 func TestDeauthRefusesAnAddressTheControllerDoesNotHold(t *testing.T) {
 	stub := newControllerStub(t, http.StatusOK)
 
-	got := runCLI(t, "", false, "deauth", "--mac", "00:00:5e:00:53:0c",
+	got := runCLI(t, "", false, "deauth", "--mac", "00:00:5e:00:53:a3",
 		"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 	if got.code != ExitFailure {
@@ -161,12 +161,12 @@ func TestDeauthReportsWithoutSendingWhenItMust(t *testing.T) {
 		{name: "an answer that is not yes", stdin: "later\n", says: "canceled"},
 		{
 			name: "dry run on the username arm",
-			root: []string{"--dry-run"}, target: []string{"--username", labSharedUsername},
-			says: "2 clients authenticated as " + labSharedUsername,
+			root: []string{"--dry-run"}, target: []string{"--username", testSharedUsername},
+			says: "2 clients authenticated as " + testSharedUsername,
 		},
 		{
 			name:   "declined prompt on the username arm",
-			target: []string{"--username", labClientUsername}, stdin: "n\n", says: "canceled",
+			target: []string{"--username", testClientUsername}, stdin: "n\n", says: "canceled",
 		},
 	}
 
@@ -176,7 +176,7 @@ func TestDeauthReportsWithoutSendingWhenItMust(t *testing.T) {
 
 			target := tt.target
 			if target == nil {
-				target = []string{"--mac", labClientMAC}
+				target = []string{"--mac", testClientMAC}
 			}
 
 			args := append(slices.Clone(tt.root), "deauth")
@@ -217,7 +217,7 @@ func TestDeauthSends(t *testing.T) {
 			// One post per invocation on this arm too: the RPC takes the username and the
 			// controller decides how many sessions that is, so the CLI must not loop over them.
 			name:   "the username arm posts once for several sessions",
-			target: []string{"--username", labSharedUsername}, extra: []string{"--yes"},
+			target: []string{"--username", testSharedUsername}, extra: []string{"--yes"},
 		},
 	}
 
@@ -227,7 +227,7 @@ func TestDeauthSends(t *testing.T) {
 
 			target := tt.target
 			if target == nil {
-				target = []string{"--mac", labClientMAC}
+				target = []string{"--mac", testClientMAC}
 			}
 
 			args := append([]string{"deauth"}, target...)
@@ -258,8 +258,8 @@ func TestDeauthSends(t *testing.T) {
 // test nor the unit test of the classification.
 func TestDeauthWordsARejectedPathAsAnAbsentOperation(t *testing.T) {
 	tests := map[string][]string{
-		"the address arm":  {"--mac", labClientMAC},
-		"the username arm": {"--username", labClientUsername},
+		"the address arm":  {"--mac", testClientMAC},
+		"the username arm": {"--username", testClientUsername},
 	}
 
 	for name, target := range tests {
@@ -291,10 +291,10 @@ func TestDeauthWordsARejectedPathAsAnAbsentOperation(t *testing.T) {
 func TestDeauthPromptNamesTheTargetAndTheRecovery(t *testing.T) {
 	stub := newControllerStub(t, http.StatusOK)
 
-	got := runCLI(t, "n\n", false, "deauth", "--mac", labClientMAC,
+	got := runCLI(t, "n\n", false, "deauth", "--mac", testClientMAC,
 		"-c", stub.addr, "--access-token", fakeToken, "-k")
 
-	for _, want := range []string{labClientRowMAC, stub.addr, "reconnects on its own"} {
+	for _, want := range []string{testClientRowMAC, stub.addr, "reconnects on its own"} {
 		if !strings.Contains(got.stdout, want) {
 			t.Errorf("the prompt %q does not carry %q", got.stdout, want)
 		}
@@ -311,8 +311,8 @@ func TestDeauthPromptNamesHowManySessionsAUsernameHolds(t *testing.T) {
 		username string
 		says     string
 	}{
-		{name: "one session", username: labClientUsername, says: "1 client authenticated as "},
-		{name: "two sessions", username: labSharedUsername, says: "2 clients authenticated as "},
+		{name: "one session", username: testClientUsername, says: "1 client authenticated as "},
+		{name: "two sessions", username: testSharedUsername, says: "2 clients authenticated as "},
 	}
 
 	for _, tt := range tests {
@@ -341,7 +341,7 @@ func TestDeauthPromptNamesHowManySessionsAUsernameHolds(t *testing.T) {
 func TestDeauthRefusesAUsernameTheControllerDoesNotHold(t *testing.T) {
 	stub := newControllerStub(t, http.StatusOK)
 
-	got := runCLI(t, "", false, "deauth", "--username", "lab-nobody",
+	got := runCLI(t, "", false, "deauth", "--username", "test-nobody",
 		"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 	if got.code != ExitFailure {
@@ -364,7 +364,7 @@ func TestDeauthRefusesAUsernameTheControllerDoesNotHold(t *testing.T) {
 func TestDeauthDoesNotTakeItsTargetFromTheControllerAccountVariable(t *testing.T) {
 	stub := newControllerStub(t, http.StatusOK)
 
-	got := runCLIWithEnv(t, map[string]string{"WNC_USERNAME": labClientUsername}, "", false,
+	got := runCLIWithEnv(t, map[string]string{"WNC_USERNAME": testClientUsername}, "", false,
 		"deauth", "-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 	if got.code != ExitUsage {

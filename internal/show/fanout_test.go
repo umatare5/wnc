@@ -55,7 +55,7 @@ func fanEnv(t *testing.T, format string, names ...string) (env Env, out, errOut 
 			host = hostB
 		}
 
-		targets = append(targets, config.Target{Name: name, Host: host, Token: fanToken})
+		targets = append(targets, config.Target{Name: name, Host: host, Token: fakeToken})
 	}
 
 	return Env{
@@ -73,7 +73,7 @@ func fanEnv(t *testing.T, format string, names ...string) (env Env, out, errOut 
 	}, &stdout, &stderr
 }
 
-const fanToken = "TestToken0123456789ABCDEF=="
+const fakeToken = "TestToken0123456789ABCDEF=="
 
 // rowsPerController answers with one row per controller, or an error for the names
 // listed as failing.

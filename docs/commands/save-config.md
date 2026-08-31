@@ -1,26 +1,21 @@
 # wnc save-config
 
-Copy the controller's running configuration to its startup configuration. Without it every tag this CLI writes is lost when the controller reloads.
+Copy the controller's running configuration to its startup configuration.
 
 ```bash
 wnc save-config
 ```
 
 ```plaintext
-Save the running configuration of 192.168.0.231? Every change on the controller is persisted, including changes this CLI did not make. [y/N]: y
-192.168.0.231: running configuration saved
+Save the running configuration of WNC1? Every change on the controller is persisted, including changes this CLI did not make. [y/N]: y
+WNC1: running configuration saved
 ```
 
-## Options
+Without it every tag this CLI writes is lost when the controller reloads.
 
-| Option           | Meaning                                |
-| ---------------- | -------------------------------------- |
-| `--controller`   | The one controller to save             |
-| `--access-token` | Basic auth token for that controller   |
-| `--insecure`     | Skip TLS certificate verification      |
-| `--timeout`      | Request timeout                        |
-| `--yes`          | Act without the confirmation prompt    |
-| `--dry-run`      | Name the controller and change nothing |
+## Flags
+
+This command has no flags of its own. The shared flags are in [`configuration.md`](../configuration.md#flags).
 
 ## Why this exists
 
@@ -67,9 +62,9 @@ An access point's administrative state is no part of the configuration: `ap-cfg`
 
 ## Notes
 
-**"saved" is a completion, unlike every other write here.** `cisco-ia:save-config` is the one RPC this CLI posts whose schema declares an output container, and it answers with the controller's own account of the save. Six posts across the three releases each returned `Save running-config successful` in a 78-byte body, byte-identical even though 17.12 serves the `cisco-ia` module three years behind the other two. An answer carrying no result is reported as a failure rather than as a save.
+**"saved" is a completion, unlike every other write here.** `cisco-ia:save-config` is the one RPC this CLI posts whose schema declares an output container, and it answers with the controller's own account of the save. Six posts across the three releases each returned `Save running-config successful` in a 78-byte body, byte-identical even though 17.12.8 serves the `cisco-ia` module three years behind the other two. An answer carrying no result is reported as a failure rather than as a save.
 
-**It takes two to four seconds.** Measured between 2.5s and 3.7s, against about 0.13s for a container read. A `--timeout` every read survives can still refuse this one, which is the only place in this CLI where that is true.
+**It takes seconds, not milliseconds.** Measured at 3.7s at the most, against about 0.13s for a container read, so a `--timeout` every read survives can still refuse this one — the only place in this CLI where that is true.
 
 **This CLI cannot tell you whether a save is needed.** The startup configuration is not reachable over RESTCONF, so nothing here can compare the two. The controller itself can: `show running-config` heads its output with `Last configuration change` and `NVRAM config last updated`, and a running timestamp newer than the NVRAM one means there is something to save.
 
@@ -78,20 +73,20 @@ An access point's administrative state is no part of the configuration: `ap-cfg`
 Write a tag and make it survive a reload:
 
 ```bash
-wnc set rf-tag --name labo-inside --profile-5ghz labo-rf-5gh-inside --yes
+wnc set rf-tag --name test-inside --profile-5ghz test-rf-profile03 --yes
 wnc save-config --yes
 ```
 
 Check which controller would be saved without saving it:
 
 ```bash
-wnc --dry-run save-config -c 192.168.0.231
+wnc --dry-run save-config -c 192.168.0.1
 ```
 
 Save every controller in a file, one at a time:
 
 ```bash
-for host in 192.168.0.231 192.168.0.232 192.168.0.233; do
+for host in 192.168.0.1 192.168.0.2 192.168.0.3; do
   wnc save-config -c "$host" --yes
 done
 ```

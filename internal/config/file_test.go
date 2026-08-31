@@ -31,14 +31,14 @@ func TestLoadAcceptsAFullFile(t *testing.T) {
 	t.Parallel()
 
 	path := writeConfig(t, `{
-	  "note": "lab",
+	  "note": "WNC1",
 	  "timeout": "30s",
 	  "insecure": true,
 	  "format": "json",
 	  "log_level": "debug",
 	  "token": "`+fakeToken+`",
 	  "controllers": [
-	    {"name": "lab-17.12", "host": "192.168.0.231", "note": "retiring"}
+	    {"name": "WNC1", "host": "192.168.0.1", "note": "retiring"}
 	  ]
 	}`)
 
@@ -59,7 +59,7 @@ func TestLoadAcceptsAFullFile(t *testing.T) {
 		t.Fatalf("controllers = %#v", file.Controllers)
 	}
 
-	if got := *file.Controllers[0].Name; got != "lab-17.12" {
+	if got := *file.Controllers[0].Name; got != "WNC1" {
 		t.Errorf("name = %q", got)
 	}
 }

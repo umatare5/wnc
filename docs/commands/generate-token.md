@@ -10,7 +10,7 @@ wnc generate-token -u admin -p 'the-password'
 YWRtaW46dGhlLXBhc3N3b3Jk
 ```
 
-## Options
+## Flags
 
 | Option             | Source order                                 |
 | ------------------ | -------------------------------------------- |
@@ -34,11 +34,7 @@ printf '%s' "$WNC_PASSWORD" | wnc generate-token -u admin
 
 ## Storing the result
 
-In order of preference:
-
-1. A configuration file at mode `0600` — see the [README](../../README.md#configuration-file)
-2. `$WNC_ACCESS_TOKEN`
-3. `--access-token`, which puts the token in the process arguments
+A configuration file at mode `0600` comes first, being the one place the token reaches neither the shell history nor the process arguments. See [`configuration.md`](../configuration.md#where-to-keep-the-token) for the whole order, and [`configuration.md`](../configuration.md#configuration-file) for the file itself.
 
 ```bash
 export WNC_ACCESS_TOKEN="$(printf '%s' "$WNC_PASSWORD" | wnc generate-token -u admin)"

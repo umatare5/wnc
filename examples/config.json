@@ -1,0 +1,21 @@
+{
+  "note": "JSON has no comments, so every remark in this file is a note field. Keep the real thing at mode 0600.",
+  "timeout": "60s",
+  "insecure": false,
+  "format": "table",
+  "pretty": false,
+  "log_level": "warning",
+  "token": "TestToken0123456789ABCDEF==",
+  "controllers": [
+    {
+      "name": "WNC1",
+      "host": "192.168.0.1",
+      "note": "name labels every row this controller produced; host is what is dialled"
+    },
+    {
+      "name": "WNC2",
+      "host": "192.168.0.2",
+      "note": "one token covers every entry, so nothing here carries a credential"
+    }
+  ]
+}

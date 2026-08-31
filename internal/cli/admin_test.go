@@ -74,7 +74,7 @@ type adminStub struct {
 	bodies map[string]string
 }
 
-// newAdminStub serves one access point under labAPName, whose row carries docMAC, and answers
+// newAdminStub serves one access point under testAPName, whose row carries docMAC, and answers
 // every keyed radio read with the same answer, whichever slot it arrives for.
 func newAdminStub(t *testing.T, radio radioAnswer) *adminStub {
 	t.Helper()
@@ -104,10 +104,10 @@ func newAdminStubWithAddress(t *testing.T, radio radioAnswer, mapMAC string) *ad
 		s.mu.Unlock()
 
 		switch {
-		case base == "ap-name-mac-map="+labAPName:
+		case base == "ap-name-mac-map="+testAPName:
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(`{"Cisco-IOS-XE-wireless-access-point-oper:ap-name-mac-map":[` +
-				`{"wtp-name":"` + labAPName + `","wtp-mac":"` + mapMAC + `","eth-mac":"00:00:5e:00:53:03"}]}`))
+				`{"wtp-name":"` + testAPName + `","wtp-mac":"` + mapMAC + `","eth-mac":"00:00:5e:00:53:11"}]}`))
 		case strings.HasPrefix(base, radioRead):
 			if radio.status != 0 {
 				w.WriteHeader(radio.status)
@@ -171,7 +171,7 @@ var adminLeaves = []struct {
 }{
 	{
 		leaf: leafAP, rpc: apAdminRPC,
-		names: []string{labAPName},
+		names: []string{testAPName},
 		// Measured on 17.15.6: after an AP-level disable both radios still report their own
 		// admin-state as enabled, so which of the two states is being set is not something
 		// the operator can infer from the radio rows afterwards.
@@ -179,7 +179,7 @@ var adminLeaves = []struct {
 	},
 	{
 		leaf: "radio", rpc: radioAdminRPC, extra: []string{"--slot", "1"},
-		names:  []string{labAPName, "5 GHz"},
+		names:  []string{testAPName, "5 GHz"},
 		prompt: "slot 1 (5 GHz)",
 	},
 }
@@ -207,7 +207,7 @@ func TestAdminSendsTheModeItsVerbNames(t *testing.T) {
 				stub := newAdminStub(t, radioAnswer{row: radio5InSlot1})
 
 				args := append([]string{
-					verb.verb, leaf.leaf, "--ap-name", labAPName,
+					verb.verb, leaf.leaf, "--ap-name", testAPName,
 					"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes",
 				}, leaf.extra...)
 
@@ -250,7 +250,7 @@ func TestAdminSendsTheModeItsVerbNames(t *testing.T) {
 					}
 				}
 
-				if !strings.Contains(got.stdout, labAPName) {
+				if !strings.Contains(got.stdout, testAPName) {
 					t.Errorf("stdout %q does not name the access point", got.stdout)
 				}
 
@@ -286,7 +286,7 @@ func TestAdminRadioSendsTheSlotAndTheBandTheTypeTakes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			stub := newAdminStub(t, radioAnswer{row: tt.row})
 
-			got := runCLI(t, "", false, "disable", "radio", "--ap-name", labAPName, "--slot", tt.slot,
+			got := runCLI(t, "", false, "disable", "radio", "--ap-name", testAPName, "--slot", tt.slot,
 				"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 			if got.code != ExitOK {
@@ -325,37 +325,37 @@ func TestAdminRadioRefusesBeforeContactingAnything(t *testing.T) {
 		},
 		{
 			name:        "two names",
-			args:        []string{"--slot", "1", "--ap-name", labAPName, "--ap-name", "lab-ap-2"},
+			args:        []string{"--slot", "1", "--ap-name", testAPName, "--ap-name", "TEST-AP02"},
 			controllers: 1, mentions: "one access point per invocation, --ap-name given 2 times",
 		},
 		{
 			name: "an empty name", args: []string{"--slot", "1", "--ap-name", ""},
 			controllers: 1, mentions: "must not be empty",
 		},
-		{name: "no slot", args: []string{"--ap-name", labAPName}, controllers: 1, mentions: "requires --slot"},
+		{name: "no slot", args: []string{"--ap-name", testAPName}, controllers: 1, mentions: "requires --slot"},
 		{
-			name: "a slot above the declared range", args: []string{"--ap-name", labAPName, "--slot", "4"},
+			name: "a slot above the declared range", args: []string{"--ap-name", testAPName, "--slot", "4"},
 			controllers: 1, mentions: "accepted values are 0 to 3",
 		},
 		{
-			name: "a slot below the declared range", args: []string{"--ap-name", labAPName, "--slot", "-1"},
+			name: "a slot below the declared range", args: []string{"--ap-name", testAPName, "--slot", "-1"},
 			controllers: 1, mentions: "accepted values are 0 to 3",
 		},
 		{
-			name: "no controller", args: []string{"--ap-name", labAPName, "--slot", "1"},
+			name: "no controller", args: []string{"--ap-name", testAPName, "--slot", "1"},
 			controllers: 0, mentions: "no controller given",
 		},
 		{
-			name: "two controllers", args: []string{"--ap-name", labAPName, "--slot", "1"},
+			name: "two controllers", args: []string{"--ap-name", testAPName, "--slot", "1"},
 			controllers: 2, mentions: "one controller",
 		},
 		{
-			name: "piped stdin cannot answer the prompt", args: []string{"--ap-name", labAPName, "--slot", "1"},
+			name: "piped stdin cannot answer the prompt", args: []string{"--ap-name", testAPName, "--slot", "1"},
 			controllers: 1, piped: true, mentions: "--yes",
 		},
 		// The slot is decidable without the controller, so it is decided first.
 		{
-			name: "no slot outranks two controllers", args: []string{"--ap-name", labAPName},
+			name: "no slot outranks two controllers", args: []string{"--ap-name", testAPName},
 			controllers: 2, mentions: "requires --slot",
 		},
 		// And the name is decided before the slot, for the same reason.
@@ -463,7 +463,7 @@ func TestAdminRadioRefusesAStateTheRPCCannotName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			stub := newAdminStub(t, tt.radio)
 
-			got := runCLI(t, "", false, "disable", "radio", "--ap-name", labAPName, "--slot", tt.slot,
+			got := runCLI(t, "", false, "disable", "radio", "--ap-name", testAPName, "--slot", tt.slot,
 				"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 			if got.code != ExitFailure {
@@ -500,7 +500,7 @@ func TestAdminDryRunReadsAndSendsNothing(t *testing.T) {
 				stub := newAdminStub(t, radioAnswer{row: radio5InSlot1})
 
 				args := append([]string{
-					"--dry-run", verb.verb, leaf.leaf, "--ap-name", labAPName,
+					"--dry-run", verb.verb, leaf.leaf, "--ap-name", testAPName,
 					"-c", stub.addr, "--access-token", fakeToken, "-k",
 				}, leaf.extra...)
 
@@ -556,7 +556,7 @@ func TestAdminConfirmation(t *testing.T) {
 				stub := newAdminStub(t, radioAnswer{row: radio5InSlot1})
 
 				args := append([]string{
-					"disable", leaf.leaf, "--ap-name", labAPName,
+					"disable", leaf.leaf, "--ap-name", testAPName,
 					"-c", stub.addr, "--access-token", fakeToken, "-k",
 				}, leaf.extra...)
 				args = append(args, tt.extra...)
@@ -588,7 +588,7 @@ func TestAdminConfirmation(t *testing.T) {
 // levels down: FullName is what makes the suffix a command an operator can retype, and the
 // suggestion is drawn from the flags this leaf parses, its own --slot included.
 func TestAdminRadioUsageFaultNamesTheLeafsOwnHelp(t *testing.T) {
-	got := runCLI(t, "", false, "enable", "radio", "--slotx", "1", "--ap-name", labAPName)
+	got := runCLI(t, "", false, "enable", "radio", "--slotx", "1", "--ap-name", testAPName)
 
 	if got.code != ExitUsage {
 		t.Fatalf("exit = %d, want %d", got.code, ExitUsage)
@@ -619,7 +619,7 @@ func TestAdminCommandsAreNamedForTheVerbTheyBuild(t *testing.T) {
 func TestAdminRadioRefusesAMapRowWithNoAddress(t *testing.T) {
 	stub := newAdminStubWithAddress(t, radioAnswer{row: radio5InSlot1}, "")
 
-	got := runCLI(t, "", false, "disable", "radio", "--ap-name", labAPName, "--slot", "1",
+	got := runCLI(t, "", false, "disable", "radio", "--ap-name", testAPName, "--slot", "1",
 		"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 	if got.code != ExitFailure {
@@ -645,7 +645,7 @@ func TestAdminRadioRefusesAMapRowWithNoAddress(t *testing.T) {
 func TestAdminRadioNamesTheServedBandAndSendsTheTypesBand(t *testing.T) {
 	stub := newAdminStub(t, radioAnswer{row: radioXORInSlot2})
 
-	got := runCLI(t, "", false, "disable", "radio", "--ap-name", labAPName, "--slot", "2",
+	got := runCLI(t, "", false, "disable", "radio", "--ap-name", testAPName, "--slot", "2",
 		"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 	if got.code != ExitOK {

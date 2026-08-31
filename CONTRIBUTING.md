@@ -6,23 +6,25 @@ Thank you for considering a contribution.
 
 The following `make` commands are available for development and testing:
 
-| Command                     | Description                                            |
-| :-------------------------- | :----------------------------------------------------- |
-| `make help`                 | Display available targets and requirements             |
-| `make build`                | Build the binary to `./tmp/wnc`                        |
-| `make lint`                 | Verify the lint config, run golangci-lint, tidy go.mod |
-| `make test-unit`            | Run unit tests with coverage using gotestsum           |
-| `make test-unit-coverage`   | Generate HTML coverage report                          |
-| `make snapshot`             | Build a GoReleaser snapshot                            |
-| `make clean`                | Remove build artifacts and backup files                |
-| `make image`                | Build Docker image                                     |
-| `make pre-commit-install`   | Install the pre-commit hooks                           |
-| `make pre-commit-test`      | Run every hook across the tree                         |
-| `make pre-commit-uninstall` | Remove the pre-commit hooks                            |
+| Command                     | Description                                              |
+| :-------------------------- | :------------------------------------------------------- |
+| `make help`                 | Display available targets and requirements               |
+| `make build`                | Build the binary to `./tmp/wnc`                          |
+| `make lint`                 | Verify the lint config, run golangci-lint, tidy `go.mod` |
+| `make test-unit`            | Run unit tests with coverage using gotestsum             |
+| `make test-unit-coverage`   | Generate HTML coverage report                            |
+| `make snapshot`             | Build a GoReleaser snapshot                              |
+| `make clean`                | Remove build artifacts and backup files                  |
+| `make image`                | Build Docker image                                       |
+| `make pre-commit-install`   | Install the pre-commit hooks                             |
+| `make pre-commit-test`      | Run every hook across the tree                           |
+| `make pre-commit-uninstall` | Remove the pre-commit hooks                              |
 
 `make test-unit` clears the `WNC_*` environment variables before running, because urfave reads them at flag-parse time and a developer's own shell would otherwise decide what the command-tree tests see. Add any new variable the CLI reads to that list.
 
-[`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) transcribes `--help` for every command, and [`NOTICE`](NOTICE) reproduces the licence of every module the binary links. Both are maintained by hand: a change to a flag, a usage line or a command description updates the first, and a change to the linked module set updates the second.
+Two files are maintained by hand. [`docs/help.md`](docs/help.md) transcribes `--help` for every command, so a change to a flag, a usage line or a command description updates it.
+
+[`NOTICE`](NOTICE) reproduces the licence of every module the binary links, so a change to the linked module set updates that one.
 
 Markdown style is enforced by the `markdownlint-cli2` hook that `make pre-commit-install` wires in, and again in CI. Links are checked in CI only, because that run reaches third-party hosts. Run `lychee .` to reproduce a link failure locally.
 
@@ -30,7 +32,7 @@ The hook path is the shared git common directory, so `make pre-commit-install` a
 
 ## Testing
 
-See [`docs/TESTING.md`](docs/TESTING.md) for how the suite is arranged, what the column invariants assert, and how the TLS test harness stands in for a controller.
+See [`docs/testing.md`](docs/testing.md) for how the suite is arranged, what the column invariants assert, and how the TLS test harness stands in for a controller.
 
 ## Build
 
@@ -46,7 +48,7 @@ This cross-compiles a Linux binary into `./tmp/image/linux/<arch>`, then builds 
 
 To release a new version, follow these steps:
 
-1. Add the `## [vX.Y.Z]` section to `CHANGELOG.md` above the previous release, matching the version in the `VERSION` file, and add that version's release link at the foot of the file.
+1. Add the `## [vX.Y.Z]` section to `CHANGELOG.md` above the previous release, matching the version in the `VERSION` file, list the pull requests it carries, and add that version's release link at the foot of the file.
 2. Update the version in the `VERSION` file.
 3. Refresh the coverage badge — `make test-unit` then `octocov badge coverage --config .octocov.yml > docs/assets/coverage.svg`. Nothing automates it — the reusable coverage workflow enforces the floor but writes no badge.
 4. Submit a pull request with all three files.
@@ -59,6 +61,7 @@ Merging that pull request is the whole release. A push to `main` touching `VERSI
 2. Create a feature branch
 3. Commit your changes, following the surrounding style and signing off with `Signed-off-by:`
 4. Add tests — CI enforces a coverage floor — and update the documentation alongside the code
-5. Run `make lint` and `make test-unit`
-6. Rebase your local changes against the `main` branch
-7. Create a new Pull Request
+5. Take every identity a test or a sample needs from [`docs/testing.md`](docs/testing.md#fixture-identities), never a value read off a device
+6. Run `make lint` and `make test-unit`
+7. Rebase your local changes against the `main` branch
+8. Create a new Pull Request

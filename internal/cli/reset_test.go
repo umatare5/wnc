@@ -10,14 +10,14 @@ import (
 )
 
 // Documentation addresses from the range IANA reserves. docMAC is what the resolve answers with
-// and nothing an operator sees carries it, while labClientMAC is separate because deauth does
-// print a client's address; labClientRowMAC differs from it so a leaf echoing the operator's
+// and nothing an operator sees carries it, while testClientMAC is separate because deauth does
+// print a client's address; testClientRowMAC differs from it so a leaf echoing the operator's
 // argument instead of the controller's spelling cannot pass.
 const (
-	docMAC          = "00:00:5e:00:53:01"
-	labAPName       = "lab-ap-1"
-	labClientMAC    = "00:00:5e:00:53:0a"
-	labClientRowMAC = "00:00:5E:00:53:0A"
+	docMAC           = "00:00:5e:00:53:01"
+	testAPName       = "TEST-AP01"
+	testClientMAC    = "00:00:5e:00:53:a1"
+	testClientRowMAC = "00:00:5E:00:53:A1"
 )
 
 // The usernames the collection read answers with. One is carried by a single session and one by
@@ -25,17 +25,17 @@ const (
 // session could not tell the singular wording from the plural one. A username no session carries
 // is not a constant: any other value is one.
 const (
-	labClientUsername = "lab-user-1"
-	labSharedUsername = "lab-user-2"
+	testClientUsername = "test-user-1"
+	testSharedUsername = "test-user-2"
 )
 
 // clientCollection is the unkeyed read the username resolve makes. The fourth row carries the
 // empty username most clients do, so a resolve that matched loosely would count it.
 const clientCollection = `{"Cisco-IOS-XE-wireless-client-oper:common-oper-data":[` +
-	`{"client-mac":"` + labClientRowMAC + `","username":"` + labClientUsername + `"},` +
-	`{"client-mac":"00:00:5E:00:53:0B","username":"` + labSharedUsername + `"},` +
-	`{"client-mac":"00:00:5E:00:53:0C","username":"` + labSharedUsername + `"},` +
-	`{"client-mac":"00:00:5E:00:53:0D","username":""}]}`
+	`{"client-mac":"` + testClientRowMAC + `","username":"` + testClientUsername + `"},` +
+	`{"client-mac":"00:00:5E:00:53:A2","username":"` + testSharedUsername + `"},` +
+	`{"client-mac":"00:00:5E:00:53:A3","username":"` + testSharedUsername + `"},` +
+	`{"client-mac":"00:00:5E:00:53:A4","username":""}]}`
 
 // The last path element each RPC arrives on.
 const (
@@ -59,7 +59,7 @@ type controllerStub struct {
 	hits map[string]int
 }
 
-// newControllerStub serves one access point under labAPName. A nameStatus other than 200
+// newControllerStub serves one access point under testAPName. A nameStatus other than 200
 // stands for a controller holding no access point under that name.
 func newControllerStub(t *testing.T, nameStatus int) *controllerStub {
 	t.Helper()
@@ -74,7 +74,7 @@ func newControllerStub(t *testing.T, nameStatus int) *controllerStub {
 		s.mu.Unlock()
 
 		switch {
-		case base == "ap-name-mac-map="+labAPName:
+		case base == "ap-name-mac-map="+testAPName:
 			if nameStatus != http.StatusOK {
 				w.WriteHeader(nameStatus)
 
@@ -83,16 +83,16 @@ func newControllerStub(t *testing.T, nameStatus int) *controllerStub {
 
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(`{"Cisco-IOS-XE-wireless-access-point-oper:ap-name-mac-map":[` +
-				`{"wtp-name":"` + labAPName + `","wtp-mac":"` + docMAC + `","eth-mac":"00:00:5e:00:53:03"}]}`))
+				`{"wtp-name":"` + testAPName + `","wtp-mac":"` + docMAC + `","eth-mac":"00:00:5e:00:53:11"}]}`))
 		case base == apResetRPC, base == capwapResetRPC:
 			w.WriteHeader(http.StatusNoContent)
 		case base == saveConfigRPC:
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(saveReply))
-		case base == "common-oper-data="+labClientMAC:
+		case base == "common-oper-data="+testClientMAC:
 			w.Header().Set("Content-Type", "application/yang-data+json")
 			_, _ = w.Write([]byte(`{"Cisco-IOS-XE-wireless-client-oper:common-oper-data":[` +
-				`{"client-mac":"` + labClientRowMAC + `","ap-name":"` + labAPName +
+				`{"client-mac":"` + testClientRowMAC + `","ap-name":"` + testAPName +
 				`","co-state":"client-status-run"}]}`))
 		case base == deauthRPC:
 			w.WriteHeader(http.StatusNoContent)
@@ -143,7 +143,7 @@ func TestResetRefusesBeforeContactingAnything(t *testing.T) {
 		},
 		{
 			name:     "two names",
-			args:     []string{"--ap-name", labAPName, "--ap-name", "lab-ap-2"},
+			args:     []string{"--ap-name", testAPName, "--ap-name", "TEST-AP02"},
 			mentions: "one access point per invocation, --ap-name given 2 times",
 		},
 		{
@@ -162,17 +162,17 @@ func TestResetRefusesBeforeContactingAnything(t *testing.T) {
 		},
 		{
 			name:     "no controller",
-			args:     []string{"--ap-name", labAPName},
+			args:     []string{"--ap-name", testAPName},
 			mentions: "no controller given",
 		},
 		{
 			name:     "two controllers",
-			args:     []string{"--ap-name", labAPName, "-c", "h1", "-c", "h2", "--access-token", fakeToken},
+			args:     []string{"--ap-name", testAPName, "-c", "h1", "-c", "h2", "--access-token", fakeToken},
 			mentions: "one controller",
 		},
 		{
 			name:     "piped stdin cannot answer the prompt",
-			args:     []string{"--ap-name", labAPName, "-c", "h1", "--access-token", fakeToken},
+			args:     []string{"--ap-name", testAPName, "-c", "h1", "--access-token", fakeToken},
 			piped:    true,
 			mentions: "--yes",
 		},
@@ -208,7 +208,7 @@ func TestResetRefusesBeforeContactingAnything(t *testing.T) {
 // The name reaches the controller stage as typed. Nothing local judges its characters or its
 // length, for the reason requireAPName states.
 func TestResetAPAcceptsTheNameAsTyped(t *testing.T) {
-	for _, name := range []string{"TEST-AP01", "labo-ap.floor-3", "TEST-AP01-北"} {
+	for _, name := range []string{"TEST-AP01", "test-ap.floor-3", "TEST-AP01-北"} {
 		t.Run(name, func(t *testing.T) {
 			got := runCLI(t, "", false, "reset", "ap", "--ap-name", name)
 
@@ -300,7 +300,7 @@ func TestResetConfirmation(t *testing.T) {
 				stub := newControllerStub(t, http.StatusOK)
 
 				args := []string{
-					"reset", leaf.leaf, "--ap-name", labAPName,
+					"reset", leaf.leaf, "--ap-name", testAPName,
 					"-c", stub.addr, "--access-token", fakeToken, "-k",
 				}
 				args = append(args, tt.extra...)
@@ -335,7 +335,7 @@ func TestResetConfirmation(t *testing.T) {
 					}
 				}
 
-				if !strings.Contains(got.stdout, labAPName) {
+				if !strings.Contains(got.stdout, testAPName) {
 					t.Errorf("stdout %q does not name the access point", got.stdout)
 				}
 
@@ -366,14 +366,14 @@ func TestResetDryRunSendsNothing(t *testing.T) {
 		t.Run(leaf.leaf, func(t *testing.T) {
 			stub := newControllerStub(t, http.StatusOK)
 
-			got := runCLI(t, "", true, "--dry-run", "reset", leaf.leaf, "--ap-name", labAPName,
+			got := runCLI(t, "", true, "--dry-run", "reset", leaf.leaf, "--ap-name", testAPName,
 				"-c", stub.addr, "--access-token", fakeToken, "-k")
 
 			if got.code != ExitOK {
 				t.Fatalf("exit = %d, want %d (stderr %q)", got.code, ExitOK, got.stderr)
 			}
 
-			if !strings.Contains(got.stdout, leaf.wouldDo) || !strings.Contains(got.stdout, labAPName) {
+			if !strings.Contains(got.stdout, leaf.wouldDo) || !strings.Contains(got.stdout, testAPName) {
 				t.Errorf("stdout = %q, want %q and the access point's name", got.stdout, leaf.wouldDo)
 			}
 
@@ -408,7 +408,7 @@ func TestResetRefusesANameTheControllerDoesNotHold(t *testing.T) {
 			t.Run(leaf.leaf+"/"+tt.name, func(t *testing.T) {
 				stub := newControllerStub(t, tt.status)
 
-				got := runCLI(t, "", false, "reset", leaf.leaf, "--ap-name", labAPName,
+				got := runCLI(t, "", false, "reset", leaf.leaf, "--ap-name", testAPName,
 					"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes")
 
 				if got.code != ExitFailure {
