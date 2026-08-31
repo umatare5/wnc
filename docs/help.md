@@ -1,6 +1,6 @@
-# CLI Reference
+# Help
 
-The help text of every command, transcribed from the binary. Running `--help` on any command prints the same.
+The help text of every command but `completion`, transcribed from the binary.
 
 ## wnc
 
