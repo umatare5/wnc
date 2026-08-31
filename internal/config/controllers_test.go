@@ -15,13 +15,13 @@ func TestParseControllersAccepts(t *testing.T) {
 	}{
 		{
 			name:  "host only",
-			hosts: []string{"192.168.0.231"},
-			want:  []Target{{Name: "192.168.0.231", Host: "192.168.0.231", Token: fakeToken}},
+			hosts: []string{"192.168.0.1"},
+			want:  []Target{{Name: "192.168.0.1", Host: "192.168.0.1", Token: fakeToken}},
 		},
 		{
 			name:  "host and port",
-			hosts: []string{"192.168.0.231:443"},
-			want:  []Target{{Name: "192.168.0.231:443", Host: "192.168.0.231:443", Token: fakeToken}},
+			hosts: []string{"192.168.0.1:443"},
+			want:  []Target{{Name: "192.168.0.1:443", Host: "192.168.0.1:443", Token: fakeToken}},
 		},
 		{
 			name:  "dns name",
@@ -157,14 +157,14 @@ func TestParseControllersNeverEchoesTheElement(t *testing.T) {
 func TestTargetsFromFile(t *testing.T) {
 	t.Parallel()
 
-	name, host := "lab", "192.168.0.231"
+	name, host := "WNC1", "192.168.0.1"
 
 	got, err := TargetsFromFile([]Controller{{Name: &name, Host: &host}}, fakeToken)
 	if err != nil {
 		t.Fatalf("TargetsFromFile: %v", err)
 	}
 
-	if len(got) != 1 || got[0].Name != "lab" || got[0].Host != host {
+	if len(got) != 1 || got[0].Name != "WNC1" || got[0].Host != host {
 		t.Fatalf("targets = %+v", got)
 	}
 
@@ -182,8 +182,8 @@ func TestTargetsFromFile(t *testing.T) {
 func TestTargetsFromFileRejects(t *testing.T) {
 	t.Parallel()
 
-	empty, host := "", "192.168.0.231"
-	scheme := "https://192.168.0.231"
+	empty, host := "", "192.168.0.1"
+	scheme := "https://192.168.0.1"
 
 	tests := []struct {
 		name  string

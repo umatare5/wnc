@@ -17,12 +17,12 @@ import (
 const (
 	apResetRPC     = "Cisco-IOS-XE-wireless-access-point-cmd-rpc:ap-reset"
 	capwapResetRPC = "Cisco-IOS-XE-wireless-access-point-cmd-rpc:set-rad-capwap-reset"
-	nameAP1        = "lab-ap-1"
-	nameAP2        = "lab-ap-2"
+	nameAP1        = "TEST-AP01"
+	nameAP2        = "TEST-AP02"
 	keyedName1     = "ap-name-mac-map=" + nameAP1
 	keyedName2     = "ap-name-mac-map=" + nameAP2
 	nameMapRow     = `{"Cisco-IOS-XE-wireless-access-point-oper:ap-name-mac-map":[` +
-		`{"wtp-name":"` + nameAP1 + `","wtp-mac":"` + macAP1 + `","eth-mac":"00:00:5e:00:53:03"}]}`
+		`{"wtp-name":"` + nameAP1 + `","wtp-mac":"` + macAP1 + `","eth-mac":"00:00:5e:00:53:11"}]}`
 	emptyNameMap = `{"Cisco-IOS-XE-wireless-access-point-oper:ap-name-mac-map":[]}`
 )
 

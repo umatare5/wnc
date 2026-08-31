@@ -66,7 +66,7 @@ func TestDebugFormatterIsLogfmtAndDeterministic(t *testing.T) {
 		t.Fatalf("NewWithOutput: %v", err)
 	}
 
-	l.WithField(fieldController, "lab").Error("read failed")
+	l.WithField(fieldController, "WNC1").Error("read failed")
 	got := buf.String()
 
 	if strings.Contains(got, "\x1b[") {
@@ -77,7 +77,7 @@ func TestDebugFormatterIsLogfmtAndDeterministic(t *testing.T) {
 		t.Errorf("output holds a timestamp: %q", got)
 	}
 
-	if !strings.Contains(got, "controller=lab") {
+	if !strings.Contains(got, "controller=WNC1") {
 		t.Errorf("field missing from %q", got)
 	}
 }
@@ -101,32 +101,32 @@ func TestPlainFormatterRendersOneSentence(t *testing.T) {
 		},
 		{
 			name:   "a note carries the controller only",
-			fields: logrus.Fields{fieldController: "lab"},
+			fields: logrus.Fields{fieldController: "WNC1"},
 			msg:    "2 rows excluded: no band reported",
-			want:   "error: lab: 2 rows excluded: no band reported\n",
+			want:   "error: WNC1: 2 rows excluded: no band reported\n",
 		},
 		{
 			// The status is left out on purpose: wnc.Message rebuilds an *APIError's
 			// text from the status, so the sentence already carries it.
 			name:   "a fatal read names the controller and the cause",
-			fields: logrus.Fields{fieldController: "lab", fieldCause: "auth", fieldStatus: 401},
+			fields: logrus.Fields{fieldController: "WNC1", fieldCause: "auth", fieldStatus: 401},
 			msg:    "the controller answered 401 Unauthorized",
-			want:   "error: lab: the controller answered 401 Unauthorized (cause=auth)\n",
+			want:   "error: WNC1: the controller answered 401 Unauthorized (cause=auth)\n",
 		},
 		{
 			name: "a degraded read names the endpoint too",
 			fields: logrus.Fields{
-				fieldController: "lab", "endpoint": "oper-data", fieldCause: "not-found", fieldStatus: 404,
+				fieldController: "WNC1", "endpoint": "oper-data", fieldCause: "not-found", fieldStatus: 404,
 			},
 			msg:  "the controller answered 404 Not Found",
-			want: "error: lab: the controller answered 404 Not Found (cause=not-found, endpoint=oper-data)\n",
+			want: "error: WNC1: the controller answered 404 Not Found (cause=not-found, endpoint=oper-data)\n",
 		},
 		{
 			// A field this rendering does not know is appended rather than dropped.
 			name:   "an unknown field still reaches the operator",
-			fields: logrus.Fields{fieldController: "lab", "attempt": 2},
+			fields: logrus.Fields{fieldController: "WNC1", "attempt": 2},
 			msg:    "retrying",
-			want:   "error: lab: retrying (attempt=2)\n",
+			want:   "error: WNC1: retrying (attempt=2)\n",
 		},
 	}
 
@@ -175,7 +175,7 @@ func TestFormatterFollowsTheLevel(t *testing.T) {
 				t.Fatalf("NewWithOutput: %v", err)
 			}
 
-			l.WithField(fieldController, "lab").Error("boom")
+			l.WithField(fieldController, "WNC1").Error("boom")
 
 			got := buf.String()
 			plain := !strings.Contains(got, "level=error")

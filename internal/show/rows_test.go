@@ -15,7 +15,7 @@ import (
 	"github.com/umatare5/wnc/internal/wnc"
 )
 
-var target = config.Target{Name: "lab-wlc"}
+var target = config.Target{Name: "test-wlc"}
 
 // cellsOf renders one row through its own columns, so an assertion sees exactly what
 // an operator would.
@@ -33,7 +33,7 @@ func TestClientRowsAbsenceRules(t *testing.T) {
 
 	clients := []wnc.WirelessClient{
 		{
-			MAC: "00:00:5e:00:53:11", APName: "lab-ap-1", Slot: 0, State: "client-status-run",
+			MAC: "00:00:5e:00:53:a1", APName: "TEST-AP01", Slot: 0, State: "client-status-run",
 			// The controller sends this key with an empty value on most rows, so a
 			// presence check would not catch it.
 			Username: "",
@@ -80,7 +80,7 @@ func TestClientCellsCarryTheirUnitsAndNothingElseDoes(t *testing.T) {
 	cols := ClientColumns()
 
 	reported := clientRows([]wnc.WirelessClient{{
-		MAC: "00:00:5e:00:53:11", Channel: 6, RSSI: -21, SNR: ptr(78), Speed: 143, Streams: 1,
+		MAC: "00:00:5e:00:53:a1", Channel: 6, RSSI: -21, SNR: ptr(78), Speed: 143, Streams: 1,
 	}}, ClientFilter{}, target, &Reporter{})
 
 	cells := cellsOf(cols, reported[0])
@@ -96,7 +96,7 @@ func TestClientCellsCarryTheirUnitsAndNothingElseDoes(t *testing.T) {
 	// A unit on an unreported value would read as a measurement rather than the lack of one.
 	// snr_db is in this list because 0 dB is a real margin: it is the one cell here whose
 	// value cannot be told from its absence without the pointer the fetch layer sets.
-	absent := clientRows([]wnc.WirelessClient{{MAC: "00:00:5e:00:53:12"}}, ClientFilter{}, target, &Reporter{})
+	absent := clientRows([]wnc.WirelessClient{{MAC: "00:00:5e:00:53:a2"}}, ClientFilter{}, target, &Reporter{})
 	for _, key := range []string{"channel", "rssi_dbm", "snr_db", "speed_mbps", "spatial_streams"} {
 		if got := cellsOf(cols, absent[0])[key]; got != render.Absent {
 			t.Errorf("%s = %q, want %q", key, got, render.Absent)
@@ -144,9 +144,9 @@ func TestClientRowsFilters(t *testing.T) {
 	t.Parallel()
 
 	clients := []wnc.WirelessClient{
-		{MAC: "a", SSID: "labo-a", APName: "ap-1", Band: "dot11-radio-type-bg", HasDot11: true},
-		{MAC: "b", SSID: "labo-b", APName: "ap-1", Band: "dot11-radio-type-a", HasDot11: true},
-		{MAC: "c", SSID: "labo-a", APName: "ap-2", Band: "dot11-radio-type-6ghz", HasDot11: true},
+		{MAC: "a", SSID: "test-a", APName: "ap-1", Band: "dot11-radio-type-bg", HasDot11: true},
+		{MAC: "b", SSID: "test-b", APName: "ap-1", Band: "dot11-radio-type-a", HasDot11: true},
+		{MAC: "c", SSID: "test-a", APName: "ap-2", Band: "dot11-radio-type-6ghz", HasDot11: true},
 		// No 802.11 facts at all, so the band cannot be honestly compared.
 		{MAC: "d", APName: "ap-1"},
 	}
@@ -158,9 +158,9 @@ func TestClientRowsFilters(t *testing.T) {
 	}{
 		{name: "no filter", filter: ClientFilter{}, want: "a,b,c,d"},
 		{name: "band", filter: ClientFilter{Band: "5"}, want: "b"},
-		{name: "ssid", filter: ClientFilter{SSID: "labo-a"}, want: "a,c"},
+		{name: "ssid", filter: ClientFilter{SSID: "test-a"}, want: "a,c"},
 		{name: "ap name", filter: ClientFilter{APName: "ap-2"}, want: "c"},
-		{name: "band and ssid", filter: ClientFilter{Band: "2.4", SSID: "labo-a"}, want: "a"},
+		{name: "band and ssid", filter: ClientFilter{Band: "2.4", SSID: "test-a"}, want: "a"},
 	}
 
 	for _, tt := range tests {
@@ -232,15 +232,15 @@ func TestOverviewRows(t *testing.T) {
 
 	radios := []wnc.Radio{
 		{
-			APName: "lab-ap-1", APMAC: "00:00:5e:00:53:01", Slot: 0,
+			APName: "TEST-AP01", APMAC: "00:00:5e:00:53:01", Slot: 0,
 			Mode: "radio-mode-flex-connect", Band: "dot11-2-dot-4-ghz-band",
 			AdminState: "enabled", OperState: "radio-up",
 			Channel: ptr(11), Width: ptr(20), TxPowerDBm: &power, Clients: &clients, ChUtil: &util,
-			RFProfile: "labo-rf-24gh",
+			RFProfile: "test-rf-profile01",
 		},
 		{
 			// Everything the controller guards behind a "when" is absent here.
-			APName: "lab-ap-2", APMAC: "00:00:5e:00:53:02", Slot: 1,
+			APName: "TEST-AP02", APMAC: "00:00:5e:00:53:02", Slot: 1,
 		},
 	}
 
@@ -337,16 +337,16 @@ func TestAPRowsAbsenceRules(t *testing.T) {
 
 	aps := []wnc.AP{
 		{
-			Name: "lab-ap-1", WtpMAC: "00:00:5e:00:53:01",
+			Name: "TEST-AP01", WtpMAC: "00:00:5e:00:53:01",
 			// The controller pads the regulatory code to a fixed width.
 			Country: "J4 ", Slots: 2,
 			Mode: "mode-monitor", SubMode: "wips-mode",
 			AdminState: "adminstate-enabled", OperState: "registered",
 			PowerType: "pwr-src-poe-lgcy", PowerMode: "dot11-default-high-pwr",
 			BootTime: boot, JoinTime: join,
-			Neighbors: []string{"lab-sw-1:Gi0/2", "lab-sw-2:Gi0/3"},
+			Neighbors: []string{"test-sw-1:Gi0/2", "test-sw-2:Gi0/3"},
 		},
-		{Name: "lab-ap-2"},
+		{Name: "TEST-AP02"},
 	}
 
 	rows := apRows(aps, target)
@@ -371,7 +371,7 @@ func TestAPRowsAbsenceRules(t *testing.T) {
 		t.Errorf("uptime and assoc rendered the same value %q", first["uptime_seconds"])
 	}
 
-	if first["lldp_neighbor"] != "lab-sw-1:Gi0/2, lab-sw-2:Gi0/3" {
+	if first["lldp_neighbor"] != "test-sw-1:Gi0/2, test-sw-2:Gi0/3" {
 		t.Errorf("neighbors = %q", first["lldp_neighbor"])
 	}
 
@@ -388,8 +388,8 @@ func TestAPTagRowsAbsenceRules(t *testing.T) {
 
 	no := false
 	tags := []wnc.APTag{
-		{Name: "lab-ap-1", WtpMAC: "00:00:5e:00:53:01", Misconfigured: &no, TagSource: "tag-source-ap-pnp"},
-		{Name: "lab-ap-2", WtpMAC: "00:00:5e:00:53:02"},
+		{Name: "TEST-AP01", WtpMAC: "00:00:5e:00:53:01", Misconfigured: &no, TagSource: "tag-source-ap-pnp"},
+		{Name: "TEST-AP02", WtpMAC: "00:00:5e:00:53:02"},
 	}
 
 	rows := apTagRows(tags, target)
@@ -431,10 +431,10 @@ func TestAPTagMisconfigReasonKeepsItsNoneApartFromAbsence(t *testing.T) {
 	future := "some-member-a-later-release-adds"
 
 	tags := []wnc.APTag{
-		{Name: "lab-ap-1", MisconfigReason: &none, FilterName: ""},
-		{Name: "lab-ap-2", MisconfigReason: &country, FilterName: "labo-filter"},
-		{Name: "lab-ap-3", MisconfigReason: &future},
-		{Name: "lab-ap-4"},
+		{Name: "TEST-AP01", MisconfigReason: &none, FilterName: ""},
+		{Name: "TEST-AP02", MisconfigReason: &country, FilterName: "test-filter"},
+		{Name: "TEST-AP03", MisconfigReason: &future},
+		{Name: "TEST-AP04"},
 	}
 
 	rows := apTagRows(tags, target)
@@ -451,8 +451,8 @@ func TestAPTagMisconfigReasonKeepsItsNoneApartFromAbsence(t *testing.T) {
 		t.Errorf("an empty filter name rendered %q", got)
 	}
 
-	if got := cellsOf(APTagColumns(), rows[1])["filter_name"]; got != "labo-filter" {
-		t.Errorf("filter_name = %q, want labo-filter", got)
+	if got := cellsOf(APTagColumns(), rows[1])["filter_name"]; got != "test-filter" {
+		t.Errorf("filter_name = %q, want test-filter", got)
 	}
 }
 
@@ -606,13 +606,13 @@ func TestOverviewRowsMonitorAndSnifferRadios(t *testing.T) {
 
 	radios := []wnc.Radio{
 		{
-			APName: "lab-ap-1", APMAC: "00:00:5e:00:53:01", Slot: 0,
+			APName: "TEST-AP01", APMAC: "00:00:5e:00:53:01", Slot: 0,
 			Mode: "radio-mode-sniffer", Band: "dot11-2-dot-4-ghz-band",
 			AdminState: "enabled", OperState: "radio-up",
 			Width: ptr(20), TxPowerDBm: &power, Clients: &zero, ChUtil: &zero,
 		},
 		{
-			APName: "lab-ap-2", APMAC: "00:00:5e:00:53:02", Slot: 1,
+			APName: "TEST-AP02", APMAC: "00:00:5e:00:53:02", Slot: 1,
 			Mode: "radio-mode-monitor", Band: "dot11-5-ghz-band",
 			AdminState: "enabled", OperState: "radio-up",
 			Width: ptr(40), TxPowerDBm: &power, Clients: &zero, ChUtil: &zero,
@@ -664,21 +664,21 @@ func TestAPJoinRows(t *testing.T) {
 	now := time.Date(2026, 8, 24, 12, 0, 0, 0, time.UTC)
 	joins := []wnc.APJoin{
 		{
-			Name: "lab-ap-1", WtpMAC: "00:00:5e:00:53:01", EthernetMAC: "00:00:5e:00:53:11",
-			IPAddr: "192.168.255.11", Joined: ptr(true),
+			Name: "TEST-AP01", WtpMAC: "00:00:5e:00:53:01", EthernetMAC: "00:00:5e:00:53:11",
+			IPAddr: "192.168.0.11", Joined: ptr(true),
 			LastFailurePhase: "ap-con-failure-run", LastJoinFailure: "jf-none",
 			LastConfigFailure: "cf-none", LastDiscFailure: "disc-fail-none",
 			DisconnectReason: "DTLS close alert from peer", RebootReason: "ap-reboot-reason-none",
 			LastJoin: now.Add(-2 * time.Hour), LastConfig: now.Add(-2 * time.Hour),
 		},
 		{
-			Name: "lab-ap-2", WtpMAC: "00:00:5e:00:53:02", Joined: ptr(false),
+			Name: "TEST-AP02", WtpMAC: "00:00:5e:00:53:02", Joined: ptr(false),
 			LastFailurePhase: "ap-con-failure-imgdwnld",
 			DisconnectReason: "Mode change to sniffer",
 		},
 	}
 
-	rows := apJoinRows(joins, now, config.Target{Name: "lab"})
+	rows := apJoinRows(joins, now, config.Target{Name: "WNC1"})
 	if len(rows) != 2 {
 		t.Fatalf("got %d rows, want 2", len(rows))
 	}

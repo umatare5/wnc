@@ -27,12 +27,12 @@ var tagLeaves = []struct {
 	{
 		leaf: "site-tag", noun: "site tag",
 		list:  "site-tag-configs",
-		field: []string{"--ap-join-profile", "lab-join"},
+		field: []string{"--ap-join-profile", "test-join"},
 	},
 	{
 		leaf: "rf-tag", noun: "RF tag",
 		list:  "rf-tags",
-		field: []string{"--profile-5ghz", "lab-rf-5"},
+		field: []string{"--profile-5ghz", "test-rf-5"},
 	},
 }
 
@@ -203,17 +203,17 @@ func TestTagSetRefusesAContradictoryCombination(t *testing.T) {
 			// Both are keys of the wlan-policy list, so one alone binds nothing. Before the
 			// guard this printed "updated" having sent no write at all.
 			name: "wlan without a policy profile", leaf: "policy-tag",
-			extra: []string{"--wlan", "lab-corp"}, mentions: "--policy-profile",
+			extra: []string{"--wlan", "test-corp"}, mentions: "--policy-profile",
 		},
 		{
 			name: "policy profile without a wlan", leaf: "policy-tag",
-			extra: []string{"--policy-profile", "lab-pol"}, mentions: "--wlan",
+			extra: []string{"--policy-profile", "test-pol"}, mentions: "--wlan",
 		},
 		{
 			// flex-profile declares when "../is-local-site = 'false'", so the controller
 			// answers 400 for the pair on every release measured.
 			name: "a local site with a flex profile", leaf: "site-tag",
-			extra: []string{"--local-site", "--flex-profile", "lab-flex"}, mentions: "--flex-profile",
+			extra: []string{"--local-site", "--flex-profile", "test-flex-profile01"}, mentions: "--flex-profile",
 		},
 	}
 
@@ -256,7 +256,7 @@ func TestTagSetSendsACompleteWLANBinding(t *testing.T) {
 
 	got := runCLI(t, "", false, "set", "policy-tag", "--name", tagName,
 		"-c", stub.addr, "--access-token", fakeToken, "-k", "--yes",
-		"--wlan", "lab-corp", "--policy-profile", "lab-pol")
+		"--wlan", "test-corp", "--policy-profile", "test-pol")
 
 	if got.code != ExitOK {
 		t.Fatalf("exit = %d, want %d (stderr %q)", got.code, ExitOK, got.stderr)
@@ -493,7 +493,7 @@ func TestTagNameKeepsTheSpacesAFlagValueCarries(t *testing.T) {
 // missing name is. Both faults are exit 2 and neither reaches a controller, so the message
 // is the only thing that shows which one was decided first — and the order is the design.
 func TestTagSetNamesTheContradictionBeforeTheMissingName(t *testing.T) {
-	got := runCLI(t, "", false, "set", "policy-tag", "--wlan", "lab-corp")
+	got := runCLI(t, "", false, "set", "policy-tag", "--wlan", "test-corp")
 
 	if got.code != ExitUsage {
 		t.Fatalf("exit = %d, want %d", got.code, ExitUsage)

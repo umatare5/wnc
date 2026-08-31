@@ -10,8 +10,8 @@ import (
 // case, so a read that echoed its argument instead of returning the row cannot pass — every
 // client-mac a controller serves is lowercase, which is the fixture's own device here.
 const (
-	macClient    = "00:00:5e:00:53:0a"
-	rowClientMAC = "00:00:5E:00:53:0A"
+	macClient    = "00:00:5e:00:53:a1"
+	rowClientMAC = "00:00:5E:00:53:A1"
 	keyedClient  = "common-oper-data=" + macClient
 	clientRow    = `{"Cisco-IOS-XE-wireless-client-oper:common-oper-data":[` +
 		`{"client-mac":"` + rowClientMAC + `","ap-name":"` + nameAP1 + `","co-state":"client-status-run"}]}`
@@ -25,13 +25,13 @@ const deauthRPC = "Cisco-IOS-XE-wireless-client-rpc:apf-ms-delete-all"
 // The username two clients share, and one no client carries. A username is a bare string in the
 // schema, so a space in it is legal and is here on purpose.
 const (
-	sharedUsername = "lab user"
-	absentUsername = "lab-nobody"
+	sharedUsername = "test user"
+	absentUsername = "test-nobody"
 	usernameRows   = `{"Cisco-IOS-XE-wireless-client-oper:common-oper-data":[` +
 		`{"client-mac":"` + rowClientMAC + `","username":"` + sharedUsername + `"},` +
-		`{"client-mac":"00:00:5E:00:53:0B","username":"` + sharedUsername + `"},` +
-		`{"client-mac":"00:00:5E:00:53:0C","username":"lab-other"},` +
-		`{"client-mac":"00:00:5E:00:53:0D","username":""}]}`
+		`{"client-mac":"00:00:5E:00:53:A2","username":"` + sharedUsername + `"},` +
+		`{"client-mac":"00:00:5E:00:53:A3","username":"test-other"},` +
+		`{"client-mac":"00:00:5E:00:53:A4","username":""}]}`
 )
 
 // The address the row carries is what goes on the wire, so the read has to return it rather
@@ -103,7 +103,7 @@ func TestClientsByUsernameCountsOnlyExactMatches(t *testing.T) {
 		want     int
 	}{
 		{name: "two sessions share it", username: sharedUsername, want: 2},
-		{name: "one session carries it", username: "lab-other", want: 1},
+		{name: "one session carries it", username: "test-other", want: 1},
 		{name: "no session carries it", username: absentUsername, want: 0},
 		// The guard against this is in the CLI, and this pins what would happen without it.
 		{name: "the empty value is not a wildcard", username: "", want: 1},

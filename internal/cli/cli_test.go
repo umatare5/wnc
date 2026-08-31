@@ -489,10 +489,10 @@ func TestConfigFile(t *testing.T) {
 
 	t.Run("dry-run reports a valid file", func(t *testing.T) {
 		path := writeFile(t, `{
-		  "note": "lab",
+		  "note": "WNC1",
 		  "timeout": "30s",
 		  "token": "`+fakeToken+`",
-		  "controllers": [{"name": "lab", "host": "192.168.0.231"}]
+		  "controllers": [{"name": "WNC1", "host": "192.168.0.1"}]
 		}`)
 
 		got := runCLI(t, "", false, "--config", path, "--dry-run")

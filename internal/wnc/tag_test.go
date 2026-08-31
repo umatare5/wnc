@@ -106,7 +106,7 @@ func TestTagCreatePayloads(t *testing.T) {
 	t.Parallel()
 
 	desc := "written by a test"
-	profile := "lab-profile"
+	profile := "test-profile"
 
 	tests := []struct {
 		name   string
@@ -129,7 +129,7 @@ func TestTagCreatePayloads(t *testing.T) {
 			},
 			want: `{"Cisco-IOS-XE-wireless-wlan-cfg:policy-list-entry":{"tag-name":"t1",` +
 				`"description":"written by a test","wlan-policies":{"wlan-policy":` +
-				`[{"wlan-profile-name":"lab-profile","policy-profile-name":"lab-profile"}]}}}`,
+				`[{"wlan-profile-name":"test-profile","policy-profile-name":"test-profile"}]}}}`,
 			method: http.MethodPost,
 		},
 		{
@@ -144,7 +144,7 @@ func TestTagCreatePayloads(t *testing.T) {
 				return c.CreateSiteTag(t.Context(), "t2", TagFields{APJoinProfile: &profile})
 			},
 			want: `{"Cisco-IOS-XE-wireless-site-cfg:site-tag-config":` +
-				`{"site-tag-name":"t2","ap-join-profile":"lab-profile"}}`,
+				`{"site-tag-name":"t2","ap-join-profile":"test-profile"}}`,
 			method: http.MethodPost,
 		},
 		{
@@ -156,7 +156,7 @@ func TestTagCreatePayloads(t *testing.T) {
 				return c.CreateSiteTag(t.Context(), "t2", TagFields{FlexProfile: &profile})
 			},
 			want: `{"Cisco-IOS-XE-wireless-site-cfg:site-tag-config":` +
-				`{"site-tag-name":"t2","flex-profile":"lab-profile","is-local-site":false}}`,
+				`{"site-tag-name":"t2","flex-profile":"test-profile","is-local-site":false}}`,
 			method: http.MethodPost,
 		},
 		{
@@ -171,7 +171,7 @@ func TestTagCreatePayloads(t *testing.T) {
 				return c.CreateRFTag(t.Context(), "t3", TagFields{Profile5GHz: &profile})
 			},
 			want: `{"Cisco-IOS-XE-wireless-rf-cfg:rf-tag":` +
-				`{"tag-name":"t3","dot11a-rf-profile-name":"lab-profile"}}`,
+				`{"tag-name":"t3","dot11a-rf-profile-name":"test-profile"}}`,
 			method: http.MethodPost,
 		},
 	}
@@ -247,7 +247,7 @@ func TestRFTagWriteOmitsTheRadioProfileContainer(t *testing.T) {
 func TestRFTagUpdateReadsThenMergesOnTheKeyedURL(t *testing.T) {
 	t.Parallel()
 
-	profile := "lab-profile"
+	profile := "test-profile"
 	r := newRecorder(t, http.StatusOK,
 		`{"Cisco-IOS-XE-wireless-rf-cfg:rf-tag":[{"tag-name":"has space","description":"kept"}]}`)
 
@@ -276,7 +276,7 @@ func TestRFTagUpdateReadsThenMergesOnTheKeyedURL(t *testing.T) {
 	// The description was not named and comes back from the read, so the PATCH carries it: the
 	// SDK writes the whole record back rather than only the named field.
 	if !strings.Contains(got.body, `"description":"kept"`) ||
-		!strings.Contains(got.body, `"dot11b-rf-profile-name":"lab-profile"`) {
+		!strings.Contains(got.body, `"dot11b-rf-profile-name":"test-profile"`) {
 		t.Errorf("payload dropped an unnamed field or the named one: %s", got.body)
 	}
 }

@@ -15,7 +15,7 @@ func TestNormalizeTagName(t *testing.T) {
 		wantErr  string
 		wantName string
 	}{
-		{name: "plain", kind: KindRFTag, in: "labo-inside", wantName: "labo-inside"},
+		{name: "plain", kind: KindRFTag, in: "test-inside", wantName: "test-inside"},
 		{
 			// The device pattern allows an inner space, and urfave does not touch one.
 			name: "inner space", kind: KindSiteTag, in: "floor 1", wantName: "floor 1",
