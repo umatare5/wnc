@@ -1,6 +1,6 @@
 # wnc set policy-tag, site-tag, rf-tag
 
-Create or update one tag on a controller. This tree and [delete](delete-tag.md) are the only commands that write a tag — an access point's [administrative state](enable-disable.md) is the other configuration this CLI writes.
+Create or update one tag on a controller.
 
 ```bash
 wnc set rf-tag --name <name> [--profile-5ghz <profile>]
@@ -9,23 +9,19 @@ wnc set policy-tag --name <name> [--wlan <profile> --policy-profile <profile>]
 ```
 
 ```plaintext
-Create RF tag lab-rf-inside on 192.168.0.231? [y/N]: y
-RF tag lab-rf-inside on 192.168.0.231: created
+Create RF tag test-rf-inside on WNC1? [y/N]: y
+RF tag test-rf-inside on WNC1: created
 ```
 
 A name the controller does not hold is created and one it holds is updated, so the same invocation may be repeated. A field no flag names is left as it is rather than cleared.
 
-## Options
+This tree and [delete](delete-tag.md) are the only commands that write a tag — an access point's [administrative state](enable-disable.md) is the other configuration this CLI writes.
+
+## Flags
 
 | Option              | Meaning                                                |
-| ------------------- | ------------------------------------------------------ |
+| :------------------ | :----------------------------------------------------- |
 | `--name`            | The tag's name, at most 32 characters                  |
-| `--controller`      | The one controller the tag is written on               |
-| `--access-token`    | Basic auth token for that controller                   |
-| `--insecure`        | Skip TLS certificate verification                      |
-| `--timeout`         | Request timeout                                        |
-| `--yes`             | Act without the confirmation prompt                    |
-| `--dry-run`         | Report what would be written and change nothing        |
 | `--description`     | Description, on all three kinds                        |
 | `--wlan`            | WLAN profile to bind, `policy-tag` only                |
 | `--policy-profile`  | Policy profile the WLAN is bound to, `policy-tag` only |
@@ -36,7 +32,11 @@ A name the controller does not hold is created and one it holds is updated, so t
 | `--profile-5ghz`    | 5 GHz RF profile to bind, `rf-tag` only                |
 | `--profile-6ghz`    | 6 GHz RF profile to bind, `rf-tag` only                |
 
-`--wlan` and `--policy-profile` are a pair. Both are keys of the WLAN-policy list, so one without the other binds nothing and is refused before any request.
+The shared flags are in [`configuration.md`](../configuration.md#flags).
+
+## Columns
+
+This command prints no table.
 
 ## The target
 
@@ -48,67 +48,58 @@ A leading or trailing space does reach the check. The name arrives as a flag val
 
 ## Guards
 
-**One tag per invocation.** `--name` names one, and a second occurrence is rejected rather than silently replacing the first.
-
-**One controller per invocation.** A tag is written on the controller named, so naming two is a usage fault. Nothing is sent.
+**`--wlan` and `--policy-profile` are a pair.** Both are keys of the WLAN-policy list, so one without the other binds nothing and is refused before any request.
 
 **The name is checked before any request.** A name the pattern rejects is a usage fault at exit 2, so nothing reaches a controller.
 
-**A prompt you cannot answer is a fault.** With stdin piped, `--yes` is required — the run is refused before any request goes out.
-
-**`--dry-run` reads and stops.** It reports whether the name would be created or updated and writes nothing.
+**`--dry-run` reports whether the name would be created or updated** and writes nothing.
 
 **An update naming no field writes nothing** and says so, rather than reporting a write it did not make. A field that cannot take effect on its own is refused rather than dropped, for the same reason.
 
+The rules every write keeps are in [`README.md`](../README.md#acting-on-a-controller).
+
 ## Exit codes
 
-| Code | Meaning                                               |
-| :--- | :---------------------------------------------------- |
-| 0    | The controller accepted the write, or you answered no |
-| 1    | The controller refused, or the read before it failed  |
-| 2    | Usage fault. Nothing was sent to a controller         |
+The five codes are in [`README.md`](../README.md#exit-codes).
+
+Here 1 also means the read before the write failed.
 
 ## Notes
 
-**A write is lost on a reload until it is saved.** A RESTCONF write reaches the running configuration and nowhere else, so a controller that reloads comes back without it. Measured on all three releases in scope. Run [wnc save-config](save-config.md) to persist it.
+- **A write is lost on a reload** — run [`save-config`](save-config.md) to persist it
+- **An update leaves unnamed fields alone** — every kind sends a merge `PATCH`
+- **`--flex-profile` implies a non-local site** — so naming both is a usage fault and not a 400
+- **The controller enforces no referential integrity** — a profile that exists nowhere persists
+- **Read the matching view first** — it is what tells a create from an update before sending
+- **An RF tag write never names the per-slot list** — the controller rejects it outright
 
-**An update leaves unnamed fields alone.** Every kind sends a merge `PATCH`, so a leaf the payload omits keeps the value the controller holds. Measured on 17.12.8 and again on 17.15.6: a second write naming only one profile left the description and the other profile from the first one in place.
-
-**`--flex-profile` clears `--local-site`, and naming both is refused.** The leaf declares `when "../is-local-site = 'false'"` on every release in scope and `is-local-site` defaults to **true**, so a body naming a flex profile without the flag answers `400 the 'when' expression ... failed` — measured on 17.12.8. A create therefore sends `is-local-site: false` alongside the profile, exactly as an update does, and `--local-site --flex-profile` together is a usage fault rather than a 400.
-
-**The controller enforces no referential integrity.** The three configuration modules declare no `leafref` and no `require-instance` on any release measured, so a profile name that does not exist is accepted and persists. Read `wnc show wlan` and the controller's own profile lists before binding.
-
-**`wnc show policy-tag`, `wnc show site-tag` and `wnc show rf-tag` list what exists.** Read the matching view first — it is what tells a create from an update before either is sent.
-
-**An RF tag write never names `rf-tag-radio-profiles`.** The controller rejects that container with a null list — `400 invalid value for: rf-tag-radio-profile`, measured on 17.12.8 and again on 17.15.6 — so the per-slot radio profile list is out of reach of this command.
-
-**Deleting a tag an access point resolves to was not measured.** See [delete](delete-tag.md#notes).
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 
 Create an RF tag bound to two band profiles:
 
 ```bash
-wnc set rf-tag --name lab-rf-inside \
+wnc set rf-tag --name test-rf-inside \
   --description "inside coverage" \
-  --profile-24ghz lab-rf-24 \
-  --profile-5ghz lab-rf-5
+  --profile-24ghz test-rf-24 \
+  --profile-5ghz test-rf-5
 ```
 
 Add a band to it later, leaving the rest as it is:
 
 ```bash
-wnc set rf-tag --name lab-rf-inside --profile-6ghz lab-rf-6
+wnc set rf-tag --name test-rf-inside --profile-6ghz test-rf-6
 ```
 
 Bind a WLAN to a policy profile:
 
 ```bash
-wnc set policy-tag --name lab-wlan --wlan lab-corp --policy-profile lab-corp-policy
+wnc set policy-tag --name test-wlan --wlan test-corp --policy-profile test-corp-policy
 ```
 
 Check what would happen without acting:
 
 ```bash
-wnc --dry-run set site-tag --name lab-site --ap-join-profile lab-join
+wnc --dry-run set site-tag --name test-site --ap-join-profile test-join
 ```

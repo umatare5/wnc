@@ -1,22 +1,28 @@
 # wnc show ap-join
 
-One row per access point the controller remembers — **including one that is not joined**, which no other command can show.
+One row per access point the controller remembers, joined or not.
 
 ```bash
 wnc show ap-join
 ```
 
 ```plaintext
-AP Name    Radio MAC          Ethernet MAC       IP Address      Status  Last Failure Phase  Last Join Failure        Last Config Failure  Last Discovery Failure  Last Disconnect Reason      Reboot Reason                 Last Join  Last Config  Last Discovery  Last Error  Controller
-TEST-AP01  aa:bb:cc:dd:ee:ff  aa:bb:cc:dd:ee:ff  192.168.255.11  Joined  Join                jf-dtls-alert-from-peer  None                 None                    DTLS close alert from peer  ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h7m        192.168.0.231
-TEST-AP02  aa:bb:cc:dd:ee:ff  aa:bb:cc:dd:ee:ff  192.168.255.12  Joined  Image-Download      None                     None                 None                    Image Download Success      ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h9m        192.168.0.231
-TEST-AP03  aa:bb:cc:dd:ee:ff  aa:bb:cc:dd:ee:ff  192.168.255.13  Joined  Join                jf-dtls-alert-from-peer  None                 None                    DTLS close alert from peer  ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h7m        192.168.0.231
+AP Name    Radio MAC          Ethernet MAC       IP Address    Status  Last Failure Phase  Last Join Failure        Last Config Failure  Last Discovery Failure  Last Disconnect Reason      Reboot Reason                 Last Join  Last Config  Last Discovery  Last Error  Controller
+TEST-AP01  00:00:5e:00:53:01  00:00:5e:00:53:11  192.168.0.11  Joined  Join                jf-dtls-alert-from-peer  None                 None                    DTLS close alert from peer  ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h7m        WNC1
+TEST-AP02  00:00:5e:00:53:02  00:00:5e:00:53:12  192.168.0.12  Joined  Image-Download      None                     None                 None                    Image Download Success      ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h9m        WNC1
+TEST-AP03  00:00:5e:00:53:03  00:00:5e:00:53:13  192.168.0.13  Joined  Join                jf-dtls-alert-from-peer  None                 None                    DTLS close alert from peer  ap-reboot-reason-img-upgrade  3h3m       3h3m         3h3m            3h7m        WNC1
 ```
+
+**It is the only view that shows an access point which is not joined.**
+
+## Flags
+
+The shared flags are in [`configuration.md`](../configuration.md#flags).
 
 ## Columns
 
 | Field                    | Meaning                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------ |
+| :----------------------- | :----------------------------------------------------------------------------------- |
 | `ap_name`                | Access point name                                                                    |
 | `radio_mac`              | Base radio address, which the device's join summary calls `Base MAC`                 |
 | `ethernet_mac`           | Wired interface address                                                              |
@@ -36,17 +42,14 @@ TEST-AP03  aa:bb:cc:dd:ee:ff  aa:bb:cc:dd:ee:ff  192.168.255.13  Joined  Join   
 
 ## Notes
 
-**This is the only view that shows an access point that is not joined.** The controller drops an unjoined access point from `capwap-data`, so `wnc show ap`, `wnc show ap-tag` and `wnc show overview` all lose it while the controller still remembers why it left. Measured during a mode change: `show ap summary` on the device reported two access points and `show wireless stats ap join summary` reported three.
+- **The only view of an unjoined access point** — every other collection drops it as it leaves
+- **No counter is a column** — the list declares no clear time, so a total answers nothing
+- **A `-` age is an event that never happened** — `-` under Last Config beside `Joined` says so
+- **The failure phase is history** — `Join` beside `Joined` is normal, `status` being what is now
+- **Only `None` is translated** — the device prints no string for these domains, bar the phase
+- **The disconnect reason is free text** — more reliable than the sibling enum, so never mapped
 
-**No counter is a column.** The list carries nineteen of them — join requests received, successful responses sent, discovery errors, DTLS failures — and nothing on it declares a clear time. A cumulative total with no window answers no question a reader can act on, so none is rendered. Read the route directly if a total is wanted.
-
-**An age of `-` means the event never happened.** The controller writes `1970-01-01T00:00:00+00:00` for an instant it has no value for, and six of the eleven such leaves read that way on every record of the lab fleet. A `-` under `Last Config` beside a joined access point therefore says the join completed and the configuration never did.
-
-**`last_failure_phase` is the last phase that failed, not the current state.** A healthy access point reports the phase it last stumbled in even while joined, so `Join` beside `Joined` is normal: the phase is history and `status` is now.
-
-**Only the healthy member of each reason domain is translated.** The join, config, discovery and reboot domains carry 42, 14, 17 and 59 members and the device prints a display string for none of them, so `None` is the one word mapped and every other spelling appears as the controller sent it. `Last Failure Phase` is the exception — its seven members are all mapped, because the device does print those.
-
-**The disconnect reason is free text and is never translated.** The controller writes a sentence there. It is more reliable than the sibling enum leaf, which read `unkown` on five of seven lab records while the free text was populated on all seven.
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 

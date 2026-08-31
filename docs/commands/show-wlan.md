@@ -7,16 +7,20 @@ wnc show wlan
 ```
 
 ```plaintext
-ID  Profile      SSID         Status   Security            Bands  Broadcast  P2P Block  Policy Status  Switching  Interface     Session TO  DHCP Required  Policy Profile     Tags            Controller
-5   labo-p736b2  labo-p736b2  Enabled  WPA2 PSK            2.4    Enabled    Disabled   Active         Local      LAB-INTERNAL  43200       Yes            labo-wlan-profile  labo-wlan-flex  192.168.0.231
-6   labo-p736b5  labo-p736b5  Enabled  WPA2 PSK            5      Enabled    Disabled   Active         Local      LAB-INTERNAL  43200       Yes            labo-wlan-profile  labo-wlan-flex  192.168.0.231
-7   labo-t6c73d  labo-t6c73d  Enabled  WPA3 802.1X-SHA256  5/6    Enabled    Disabled   Active         Local      LAB-INTERNAL  43200       Yes            labo-wlan-profile  labo-wlan-flex  192.168.0.231
+ID  Profile              SSID          Status   Security            Bands  Broadcast  P2P Block  Policy Status  Switching  Interface      Session TO  DHCP Required  Policy Profile         Tags            Controller
+5   test-wlan-profile01  test-essid01  Enabled  WPA2 PSK            2.4    Enabled    Disabled   Active         Local      TEST-INTERNAL  43200       Yes            test-policy-profile01  test-wlan-flex  WNC1
+6   test-wlan-profile02  test-essid02  Enabled  WPA2 PSK            5      Enabled    Disabled   Active         Local      TEST-INTERNAL  43200       Yes            test-policy-profile01  test-wlan-flex  WNC1
+7   test-wlan-profile03  test-essid03  Enabled  WPA3 802.1X-SHA256  5/6    Enabled    Disabled   Active         Local      TEST-INTERNAL  43200       Yes            test-policy-profile01  test-wlan-flex  WNC1
 ```
+
+## Flags
+
+The shared flags are in [`configuration.md`](../configuration.md#flags).
 
 ## Columns
 
 | Field                     | Meaning                                            |
-| ------------------------- | -------------------------------------------------- |
+| :------------------------ | :------------------------------------------------- |
 | `wlan_id`                 | WLAN identifier                                    |
 | `profile`                 | WLAN profile name                                  |
 | `ssid`                    | Broadcast network name                             |
@@ -36,19 +40,13 @@ ID  Profile      SSID         Status   Security            Bands  Broadcast  P2P
 
 ## Notes
 
-**A row is a WLAN paired with one policy profile.** The same WLAN bound under two tags to two different profiles is two rows, because the policy half differs. Two tags naming the same pair produce one row listing both.
+- **A row is a WLAN and one policy profile** — the same WLAN under two profiles is two rows
+- **A WLAN bound to nothing still gets a row** — only the policy half of it is unreported
+- **A binding naming no WLAN is counted** — an inner join would hide the misconfiguration
+- **Both status columns are needed** — an enabled WLAN under a shut profile reaches no radio
+- **The `+FT` suffix follows the key-management flags** — the FT mode default would mark all
 
-**A WLAN with no binding still gets a row.** Only the policy half is unreported: the WLAN exists and is worth seeing.
-
-**A binding naming a WLAN that does not exist is counted and reported.** The model permits it, and an inner join on its own would hide the misconfiguration and show a clean estate.
-
-**`status` and `policy_status` are both needed.** A WLAN can be enabled while the profile bound to it is shut, in which case no radio carries it.
-
-**`security` is derived in a fixed order.** The master WPA switch is read first, then WEP, OSEN and shared-key authentication — none of which is open even with every key-management flag false — and only then the WPA generation and the key-management set. The fast-transition suffix comes from the FT key-management flags and never from the FT mode setting, whose default would put `+FT` on nearly every WLAN.
-
-**`bands` comes from the per-band list only.** The controller also publishes a single legacy band setting, which is marked obsolete on every release in scope, stopped arriving at 17.18, and reports "all bands" on WLANs the per-band list confines to one.
-
-**`interface` is an interface name, not a VLAN identifier.** That is what the controller calls it.
+The readings behind these sit in [`measurements.md`](../measurements.md).
 
 ## Examples
 
