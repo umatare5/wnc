@@ -22,6 +22,8 @@ The following `make` commands are available for development and testing:
 
 `make test-unit` clears the `WNC_*` environment variables before running, because urfave reads them at flag-parse time and a developer's own shell would otherwise decide what the command-tree tests see. Add any new variable the CLI reads to that list.
 
+[`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) transcribes `--help` for every command, and [`NOTICE`](NOTICE) reproduces the licence of every module the binary links. Both are maintained by hand: a change to a flag, a usage line or a command description updates the first, and a change to the linked module set updates the second.
+
 Markdown style is enforced by the `markdownlint-cli2` hook that `make pre-commit-install` wires in, and again in CI. Links are checked in CI only, because that run reaches third-party hosts. Run `lychee .` to reproduce a link failure locally.
 
 The hook path is the shared git common directory, so `make pre-commit-install` also arms every other worktree and the `main` checkout. It passes `--allow-missing-config` for that reason.
@@ -38,7 +40,7 @@ The repository includes a ready to use `Dockerfile`. To build a new Docker image
 make image
 ```
 
-This cross-compiles a Linux binary into `./tmp/image`, then builds from that directory because the `Dockerfile` expects the binary at the context root. The image is tagged `$USER/wnc`. Released images are pushed to `ghcr.io/umatare5/wnc` by GoReleaser instead.
+This cross-compiles a Linux binary into `./tmp/image/linux/<arch>`, then builds from `./tmp/image` because the `Dockerfile` expects the GoReleaser context layout, `linux/<arch>/wnc` beside `LICENSE` and `NOTICE`. The image is tagged `$USER/wnc`. Released images are pushed to `ghcr.io/umatare5/wnc` by GoReleaser instead.
 
 ## Release
 

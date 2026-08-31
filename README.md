@@ -216,4 +216,4 @@ I launched this project with the help of **GitHub Copilot Coding Agent**, and I 
 
 ## Licence
 
-[MIT](LICENSE).
+MIT. The binary statically links MIT and BSD 3-Clause dependencies, whose notices are reproduced in [`NOTICE`](NOTICE) and shipped alongside [`LICENSE`](LICENSE) in every release archive and container image.

@@ -10,7 +10,7 @@ ARG TARGETPLATFORM
 # though nothing else is. It comes from a pinned image rather than the build context,
 # which is what lets `make image` and goreleaser share one Dockerfile.
 COPY --from=alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY LICENSE /LICENSE
+COPY LICENSE NOTICE /
 COPY $TARGETPLATFORM/wnc /wnc
 
 USER 65534:65534
