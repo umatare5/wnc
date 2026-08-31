@@ -95,6 +95,15 @@
       }
     },
     {
+      // An index and nothing else. A section added here would be a fact the page
+      // it points at already carries.
+      "filter": ["docs/README.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": { "match_case": true, "headings": ["# Documentation"] }
+      }
+    },
+    {
       "filter": ["docs/SECURITY.md"],
       "combine": "merge",
       "config": {

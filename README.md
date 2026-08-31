@@ -95,7 +95,7 @@ Fish reads a file rather than a sourced script, so write it to `~/.config/fish/c
 
 ## Syntax
 
-`wnc --help` prints every flag, and [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) carries the same list.
+`wnc --help` prints every flag, and [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) carries the same list. [`docs/README.md`](docs/README.md) indexes that page and every other under `docs/`.
 
 Every `show` command accepts `--controller`, `--access-token`, `--insecure`, `--format`, `--pretty`, `--timeout`, `--sort-by`, `--sort-keys` and `--sort-order`:
 
