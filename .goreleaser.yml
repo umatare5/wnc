@@ -36,8 +36,11 @@ builds:
 
 archives:
   - name_template: "{{ .ProjectName }}-v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # SECURITY.md is named on its own because the list replaces goreleaser's own
+    # defaults, and no glob here reaches a root file.
     files:
       - "README.md"
+      - "SECURITY.md"
       - "LICENSE"
       - "NOTICE"
       - "docs/*.md"
