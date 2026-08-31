@@ -75,7 +75,133 @@
         "MD033": {
           "allowed_elements": ["a", "br", "div", "h1", "img", "p", "picture", "source"]
         },
-        "MD041": { "allow_preamble": true }
+        "MD041": { "allow_preamble": true },
+        "MD043": {
+          "match_case": true,
+          "headings": [
+            "## Overview", "*",
+            "## Supported Environment", "*",
+            "## Quick Start", "*",
+            "## Syntax", "*",
+            "## Configuration", "*",
+            "## Output", "*",
+            "## Exit Codes", "*",
+            "## Troubleshooting", "*",
+            "## Contributing", "*",
+            "## Acknowledgement", "*",
+            "## Licence"
+          ]
+        }
+      }
+    },
+    {
+      // An index and nothing else. A section added here would be a fact the page
+      // it points at already carries.
+      "filter": ["docs/README.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": { "match_case": true, "headings": ["# Documentation"] }
+      }
+    },
+    {
+      "filter": ["docs/SECURITY.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": {
+          "match_case": true,
+          "headings": [
+            "# Security",
+            "## Reporting", "*",
+            "## What this CLI sends and stores", "*",
+            "## Where to keep the token", "*",
+            "## Trusting a private certificate authority", "*",
+            "## `--insecure`", "*",
+            "## Containers"
+          ]
+        }
+      }
+    },
+    {
+      "filter": ["docs/TESTING.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": {
+          "match_case": true,
+          "headings": [
+            "# Testing",
+            "## How the suite is arranged", "*",
+            "## The RESTCONF layer", "*",
+            "## The fan-out", "*",
+            "## The command tree", "*",
+            "## Invariants", "*",
+            "## Coverage", "*",
+            "## Against a real controller"
+          ]
+        }
+      }
+    },
+    {
+      // One section per command, so the file grows a heading whenever the command
+      // tree does. Only the title is pinned.
+      "filter": ["docs/CLI_REFERENCE.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": { "match_case": true, "headings": ["# CLI Reference", "*"] }
+      }
+    },
+    {
+      // One section per cause token and per symptom, so the same applies.
+      "filter": ["docs/TROUBLESHOOTING.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": { "match_case": true, "headings": ["# Troubleshooting", "*"] }
+      }
+    },
+    {
+      // The nine read commands. The leading wildcard covers the per-page title and
+      // the --options section the two filtered commands carry.
+      "filter": ["docs/commands/show-*.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": {
+          "match_case": true,
+          "headings": ["*", "## Columns", "## Notes", "## Examples"]
+        }
+      }
+    },
+    {
+      // Every command that writes to a controller closes on the same four sections.
+      // The middle wildcard carries the target and the per-command sections.
+      "filter": [
+        "docs/commands/deauth.md",
+        "docs/commands/delete-tag.md",
+        "docs/commands/enable-disable.md",
+        "docs/commands/reset-ap.md",
+        "docs/commands/reset-capwap.md",
+        "docs/commands/save-config.md",
+        "docs/commands/set-tag.md"
+      ],
+      "combine": "merge",
+      "config": {
+        "MD043": {
+          "match_case": true,
+          "headings": [
+            "*", "## Options", "*",
+            "## Guards", "## Exit codes", "## Notes", "## Examples"
+          ]
+        }
+      }
+    },
+    {
+      // The one command that contacts no controller, so it has no guard, no exit
+      // code of its own and nothing to demonstrate against a device.
+      "filter": ["docs/commands/generate-token.md"],
+      "combine": "merge",
+      "config": {
+        "MD043": {
+          "match_case": true,
+          "headings": ["*", "## Options", "## Notes", "## Storing the result"]
+        }
       }
     }
   ],

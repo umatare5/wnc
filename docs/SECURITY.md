@@ -66,4 +66,4 @@ Every run that uses it logs a warning.
 
 ## Containers
 
-The published image is `scratch` plus the binary, a certificate bundle and the licence. It runs as uid 65534 and has no shell, so a compromise of the process has nothing to invoke.
+The published image is `scratch` plus the binary, a certificate bundle, the licence and the third-party notices. It runs as uid 65534 and has no shell, so a compromise of the process has nothing to invoke.

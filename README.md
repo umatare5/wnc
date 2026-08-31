@@ -22,7 +22,7 @@
 
 </div>
 
-## ✨ Overview
+## Overview
 
 This CLI reads [Cisco Catalyst 9800 Wireless Controllers](https://www.cisco.com/site/us/en/products/networking/wireless/wireless-lan-controllers/catalyst-9800-series/index.html) over RESTCONF and prints their state as a table or as JSON.
 
@@ -33,13 +33,13 @@ This CLI reads [Cisco Catalyst 9800 Wireless Controllers](https://www.cisco.com/
 
 💡 This CLI is a lightweight alternative to parts of [Cisco Catalyst Center](https://www.cisco.com/site/us/en/products/networking/catalyst-center/index.html).
 
-## 📡 Supported Environment
+## Supported Environment
 
 Verified against Cisco Catalyst 9800 controllers running IOS-XE `17.12.8`, `17.15.6` and `17.18.4a`.
 
 Older and newer releases are expected to work. An enum spelling this CLI does not know is passed through as the controller sent it rather than being blanked, so a release that adds a value stays readable.
 
-## 🚀 Quick Start
+## Quick Start
 
 Please enable RESTCONF and HTTPS on the C9800 before using this CLI. Please see:
 
@@ -93,9 +93,9 @@ source <(wnc completion bash)
 
 Fish reads a file rather than a sourced script, so write it to `~/.config/fish/completions/wnc.fish`. `wnc completion --help` prints the line for each shell.
 
-## 🌐 Syntax
+## Syntax
 
-`wnc --help` prints every flag, and [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) carries the same list.
+`wnc --help` prints every flag, and [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) carries the same list. [`docs/README.md`](docs/README.md) indexes that page and every other under `docs/`.
 
 Every `show` command accepts `--controller`, `--access-token`, `--insecure`, `--format`, `--pretty`, `--timeout`, `--sort-by`, `--sort-keys` and `--sort-order`:
 
@@ -126,9 +126,9 @@ The `reset`, `enable`, `disable`, `set`, `delete` and `deauth` trees act on a co
 Configuration is limited to the three tag kinds and an access point's administrative state. Use [telee](https://github.com/umatare5/telee) for anything else — `wnc deauth` and the `reset` tree are operational actions and configure nothing.
 
 > [!CAUTION]
-> `--insecure` disables TLS certificate verification. **Never use it in production.** [docs/SECURITY.md](docs/SECURITY.md) covers trusting a private certificate authority instead.
+> `--insecure` disables TLS certificate verification. **Never use it in production.** [`docs/SECURITY.md`](docs/SECURITY.md) covers trusting a private certificate authority instead.
 
-## ⚙️ Configuration
+## Configuration
 
 This CLI reads five environment variables:
 
@@ -180,7 +180,7 @@ A host named by `--controller` with no token takes the file's own `token`, so th
 wnc show ap -c 192.168.0.231
 ```
 
-## 📤 Output
+## Output
 
 The table is borderless so `awk` and `cut` work on it, and the first column starts at column zero. A cell the controller did not report is `-`.
 
@@ -192,7 +192,7 @@ The JSON is a flat array with one object per table row. Its field names are exac
 wnc show client -f json | jq -r '.[] | select(.rssi_dbm < -70) | .mac'
 ```
 
-## 🚦 Exit Codes
+## Exit Codes
 
 | Code | Meaning                                                        |
 | :--- | :------------------------------------------------------------- |
@@ -202,18 +202,18 @@ wnc show client -f json | jq -r '.[] | select(.rssi_dbm < -70) | .mac'
 | 3    | Partial: at least one read failed and at least one succeeded   |
 | 130  | Interrupted. No partial table is printed                       |
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
-A read that fails is one line on stderr ending in `(cause=…)`, and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) is indexed by that token. A usage fault and a refusal from a command that acts are one `wnc: …` line, which that page indexes by its wording instead. `--log-level debug` restores the logfmt form, which carries the controller and the HTTP status as fields of their own.
+A read that fails is one line on stderr ending in `(cause=…)`, and [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) is indexed by that token. A usage fault and a refusal from a command that acts are one `wnc: …` line, which that page indexes by its wording instead. `--log-level debug` restores the logfmt form, which carries the controller and the HTTP status as fields of their own.
 
-## 🤝 Contributing
+## Contributing
 
-See [CONTRIBUTING.md](https://github.com/umatare5/wnc/blob/main/CONTRIBUTING.md) for the `make` targets, the Docker build, the release process and how to open a pull request.
+See [`CONTRIBUTING.md`](https://github.com/umatare5/wnc/blob/main/CONTRIBUTING.md) for the `make` targets, the Docker build, the release process and how to open a pull request.
 
-## 🙏 Acknowledgement
+## Acknowledgement
 
 I launched this project with the help of **GitHub Copilot Coding Agent**, and I am grateful to the global developer community for their contributions to open source projects and public repositories.
 
-## 📄 Licence
+## Licence
 
-[MIT](LICENSE).
+MIT. The binary statically links MIT and BSD 3-Clause dependencies, whose notices are reproduced in [`NOTICE`](NOTICE) and shipped alongside [`LICENSE`](LICENSE) in every release archive and container image.
