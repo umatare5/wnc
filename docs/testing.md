@@ -1,5 +1,7 @@
 # Testing
 
+How the suite is arranged, what it asserts, and the identities every fixture and sample uses.
+
 ```bash
 make test-unit            # go test -race with coverage
 make test-unit-coverage   # plus an HTML report under ./coverage
@@ -12,15 +14,66 @@ make lint                 # config verify, golangci-lint and go mod tidy
 
 Tests sit next to the code they cover, in the same package, so an unexported rule can be asserted directly rather than through a public surface built for the test. Tables and `t.Parallel()` are the default. There is no assertion library and no golden file.
 
+## Fixture Identities
+
+A fixture takes its shape from a real controller response and none of its identities. Every value below is synthetic, and this section is the canon for the samples under [`commands/`](commands/) as well as for the test files.
+
+Four kinds have a range reserved for exactly this, so nothing here is invented:
+
+| Kind         | Range                                     | Reserved by           |
+| :----------- | :---------------------------------------- | :-------------------- |
+| MAC address  | `00:00:5e:00:53:00` – `00:00:5e:00:53:ff` | RFC 7042 §2.1.2       |
+| IPv4 address | `192.168.0.0/16`                          | RFC 1918              |
+| IPv6 address | `2001:db8::/32`                           | RFC 3849              |
+| Domain name  | `example.internal`                        | ICANN private-use TLD |
+
+The MAC block's first octet has the I/G bit clear and the U/L bit set, so no fixture address can be multicast or collide with a vendor assignment. Its last octet carries the role:
+
+- **`:01`–`:0f`** — an access point's radio base address, `TEST-APnn` pairing with `:nn`
+- **`:11`–`:1f`** — an access point's Ethernet address, `TEST-APnn` pairing with `:1n`
+- **`:a1`–`:af`** — a client station
+
+The rest have no standard to take them from, so they are this repository's own:
+
+| Kind                 | Value                          |
+| :------------------- | :----------------------------- |
+| Controller name      | `WNC1` – `WNC4`                |
+| Controller host      | `192.168.0.1` – `192.168.0.4`  |
+| Access point name    | `TEST-AP01` – `TEST-AP99`      |
+| Access point serial  | `TST0000AP01` – `TST0000AP99`  |
+| Access point address | `192.168.0.11` onward          |
+| Client address       | `192.168.0.21` onward          |
+| Access token         | `TestToken0123456789ABCDEF==`  |
+| Password             | `test-token-123`               |
+| SSID                 | `test-essid01` onward          |
+| Profile              | `test-<kind>-profile01` onward |
+| Tag                  | a `test-` prefix               |
+
+A profile's `<kind>` is `wlan`, `policy`, `rf`, `ap` or `flex`, so the kind a sample names is readable from the value alone.
+
+A controller's name is what a configuration file supplies and what every prompt, report and `Controller` column carries, so a sample transcript names `WNC1` where the run behind it named `192.168.0.1` on `--controller`. [`examples/config.json`](../examples/config.json) is that file, and pairs the two.
+
+A serial cannot take the `test-` prefix and keep its shape, so it reads `TST0000APnn` — a valid `[A-Z]{3}[0-9]{4}[A-Z0-9]{4}` that no site code and no week 00 of year 00 can collide with.
+
+Two categories are deliberately outside the scheme.
+
+- **A grammar case is not an identity** — `internal/config` keeps `a.example` and `[2001:db8::1]` for parse assertions
+- **A dialled address must be unroutable** — RFC 1918 space can be live on a developer's own LAN
+
+So a test whose host may be reached keeps an address reserved against reachability instead: `192.0.2.0/24` from RFC 5737, and `240.0.0.1` from RFC 5735 where the assertion is that nothing answers.
+
+> [!IMPORTANT]
+> Never paste a MAC address, serial number, hostname, username, SSID or tag name from a capture into a committed fixture or a sample transcript. Nothing in this repository redacts one, so a value pasted by hand reaches the tree unchanged.
+
 ## The RESTCONF layer
 
 `internal/wnc` is tested against a TLS test server serving canned responses, routed on the last element of the request path. The SDK pins its own dialer, so no transport can be injected and the server has to be a real listener — one test asserts that much before the fixture-driven ones rely on it.
 
-Fixtures carry no value read off a device. Addresses come from the documentation range RFC 7042 reserves, and one fixture deliberately includes a credential leaf to assert the hand-written struct drops it at decode.
+One fixture deliberately includes a credential leaf, to assert the hand-written struct drops it at decode.
 
 ## The fan-out
 
-`internal/show` tests the fan-out with a fetch function that never reaches the network. Client construction still happens for real, against hosts from the RFC 5737 test range, so the outcome classification, the reporting order and the "print nothing when everything failed" rule are exercised without a server.
+`internal/show` tests the fan-out with a fetch function that never reaches the network. Client construction still happens for real, against the unroutable range above, so the outcome classification, the reporting order and the "print nothing when everything failed" rule are exercised without a server.
 
 ## The command tree
 
@@ -30,16 +83,16 @@ Nothing in that file runs in parallel, and that is deliberate: urfave reads the 
 
 ## Invariants
 
-Some checks are about shape rather than behaviour, and they exist because the failure they catch is silent:
+Some checks are about shape rather than behaviour, and they exist because the failure they catch is silent.
 
-- A column is declared in three places — the sort-key list, the column list and the row struct's json tags — and all three must agree, in order. json/v2 drops a tag a sibling field repeats, which would otherwise leave a column in the table and absent from the JSON with nothing failing.
-- `omitempty` is banned outright, because it also drops a reported zero, an empty string and a reported false. `omitzero` is allowed only on a pointer, where the zero value is nil and so genuinely means "not reported".
-- The json `format` tag is banned: every value of it is rejected at run time, after passing both the compiler and the linter.
-- Every command in the tree must carry the usage hook, because urfave consults only the running command's own.
+- **Three declarations, one order** — the sort-key list, the column list and the json tags must agree
+- **Banned outright** — `omitempty` drops a reported zero, an empty string and a reported false alike
+- **Allowed on a pointer only** — `omitzero` there means nil, which is what "not reported" is
+- **Banned as well** — every value of the json `format` tag is rejected at run time, not at compile time
+- **Every command carries the usage hook** — urfave consults the running command's own and no other
 
-## Coverage
-
-CI enforces a floor. Run `make test-unit-coverage` and open `coverage/report.html` to see what a change left uncovered.
+> [!NOTE]
+> `json/v2` drops a tag a sibling field repeats, which would leave a column in the table and absent from the JSON with nothing failing. That silence is why the three declarations are asserted rather than reviewed.
 
 ## Against a real controller
 
@@ -57,7 +110,7 @@ The seven trees that act cannot be verified that way, because running one change
 wnc --dry-run disable radio --ap-name "<ap-name>" --slot 1 -c "<host>"
 ```
 
-`--dry-run` stops before the RPC, so it verifies everything except the write. The write itself was measured once on 17.18 for all four access-point RPCs, three of them through the ap-name arm. A dry run is not a substitute for repeating that on a release where it matters. `save-config` was measured on all three releases, `deauth --mac` on 17.18.4a and `deauth --username` on 17.15.6.
+`--dry-run` stops before the RPC, so it verifies everything except the write. The write itself was measured once on 17.18.4a for all four access-point RPCs, three of them through the ap-name arm. A dry run is not a substitute for repeating that on a release where it matters. `save-config` was measured on all three releases, `deauth --mac` on 17.18.4a and `deauth --username` on 17.15.6.
 
 **A write measurement needs a stable target, not just a before and an after.** The `deauth --username` post was attributed to its effect because the target's association had been unchanged for 82 minutes across four snapshots, while two no-post control windows of 35 seconds each moved 1 and 0 of the 18 clients. Without the stability, one moved client is inside the estate's own churn.
 
