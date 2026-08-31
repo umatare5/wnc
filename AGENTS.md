@@ -59,7 +59,7 @@ Make targets ([`Makefile`](Makefile)):
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore(deps):`, etc.).
 - Sign off commits with `Signed-off-by:` (DCO).
-- Open PRs against `main`. CI runs lint, tests, CodeQL and actionlint.
+- Open PRs against `main`. CI runs lint, tests, CodeQL, govulncheck, actionlint, markdownlint and the link check.
 - Never commit a token, a device serial number, or a client-derived hostname, username or IPv6 address. A `192.168.0.0/16` lab address and a `lab*` name are the exception, and a real client value needs approval first.
 
 ## Domain Knowledge
