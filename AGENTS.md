@@ -1,16 +1,16 @@
 # Repository Instructions
 
 > [!IMPORTANT]
-> Read [README.md](README.md) for project overview and the command reference.
+> Read [`README.md`](README.md) for project overview and the command reference.
 
 ## Tech Stack
 
-- Go 1.27+ (see [go.mod](go.mod))
+- Go 1.27+ (see [`go.mod`](go.mod))
 - [`umatare5/cisco-ios-xe-wireless-go`](https://github.com/umatare5/cisco-ios-xe-wireless-go) v0.11+ — sole RESTCONF SDK for Cisco C9800 WNC
 - [`urfave/cli/v3`](https://github.com/urfave/cli) v3.11+ — command tree, flags and application lifecycle
 - [`sirupsen/logrus`](https://github.com/sirupsen/logrus) v1.10+ — process logger and the `slog` bridge the SDK takes
 - [`olekukonko/tablewriter`](https://github.com/olekukonko/tablewriter) v1.1+ — borderless table writer
-- [`goreleaser`](https://goreleaser.com/) v2 — cross-platform release builds (see [.goreleaser.yml](.goreleaser.yml))
+- [`goreleaser`](https://goreleaser.com/) v2 — cross-platform release builds (see [`.goreleaser.yml`](.goreleaser.yml))
 
 Those four libraries are the whole direct third-party set; do not add a fifth. Configuration parsing and JSON output use the stdlib `encoding/json/v2`.
 
@@ -30,10 +30,10 @@ Install required tools (one-time):
 
 - `go install gotest.tools/gotestsum@latest`
 - `golangci-lint` - See <https://golangci-lint.run/docs/welcome/install/>
-- `goreleaser` release builds (see [.goreleaser.yml](.goreleaser.yml))
-- `make pre-commit-install` wires `no-commit-to-main`, `golangci-lint`, `actionlint`, `gitleaks` and `markdownlint-cli2` (see [.pre-commit-config.yaml](.pre-commit-config.yaml))
+- `goreleaser` release builds (see [`.goreleaser.yml`](.goreleaser.yml))
+- `make pre-commit-install` wires `no-commit-to-main`, `golangci-lint`, `actionlint`, `gitleaks` and `markdownlint-cli2` (see [`.pre-commit-config.yaml`](.pre-commit-config.yaml))
 
-Make targets ([Makefile](Makefile)):
+Make targets ([`Makefile`](Makefile)):
 
 - `make build` — Build binary into `tmp/wnc`
 - `make lint` — `golangci-lint config verify` + `golangci-lint run` + `go mod tidy`
@@ -46,14 +46,14 @@ Make targets ([Makefile](Makefile)):
 
 ## Code Style
 
-- Linting and formatting are enforced by `golangci-lint` in the pre-commit hook (see [.pre-commit-config.yaml](.pre-commit-config.yaml)); its `formatters` block owns `gofumpt`, `gci`, `goimports` and `golines`.
+- Linting and formatting are enforced by `golangci-lint` in the pre-commit hook (see [`.pre-commit-config.yaml`](.pre-commit-config.yaml)); its `formatters` block owns `gofumpt`, `gci`, `goimports` and `golines`.
 - A comment carries what the code cannot: a value another file must match, an order the controller rejects, an SDK quirk. One or two sentences, English, no emoji.
 
 ## Testing Instructions
 
 - Run `make test-unit` before committing.
 - Place tests next to code under test (`*_test.go`) and in the same package.
-- Coverage threshold is enforced by [.github/workflows/go-test-coverage.yml](.github/workflows/go-test-coverage.yml).
+- Coverage threshold is enforced by [`.github/workflows/go-test-coverage.yml`](.github/workflows/go-test-coverage.yml).
 
 ## Commits and PRs
 
@@ -68,7 +68,7 @@ Make targets ([Makefile](Makefile)):
 
 - **A YANG model is a design document, not the implementation.** Units, ranges, enum spellings, and even the presence of a leaf can differ on a live controller, so confirm every value against a RESTCONF response from a real WNC, and take an enum's members and their numbers from the model the controller itself serves.
 - **A configuration leaf missing from a response means its default is in force, not that nothing set it.** The default is often `true`, so decoding an omitted boolean as `false` inverts the reading: on a plain read of `wlan-cfg-entries`, `wpa2-enabled` and `auth-key-mgmt-dot1x` are absent from exactly the WLANs where they are enabled, and present only where they were explicitly switched off.
-- **Ask for the values in force, and only on a configuration read — an operational absence is structural, so materialising a default there fabricates a reading.** `?with-defaults=report-all` returns the omitted leaves and a controller that rejects it answers `400`. It also materialises the PSK and the WEP key material, so the raw struct in [internal/wnc/fetch_wlan.go](internal/wnc/fetch_wlan.go) is an allow-list whose undeclared leaves are dropped at decode.
+- **Ask for the values in force, and only on a configuration read — an operational absence is structural, so materialising a default there fabricates a reading.** `?with-defaults=report-all` returns the omitted leaves and a controller that rejects it answers `400`. It also materialises the PSK and the WEP key material, so the raw struct in [`internal/wnc/fetch_wlan.go`](internal/wnc/fetch_wlan.go) is an allow-list whose undeclared leaves are dropped at decode.
 - **A present container can still be missing the leaf, and a present leaf must not be dropped.** Most SDK containers are non-pointer structs, so an absent leaf decodes to `0`: `curr-freq` sits under `when radio-mode != monitor/sniffer/invalid` while `phy-ht-cfg` around it stays present. The SDK types `curr-freq` and `chan-width` as pointers for exactly this reason, and a non-pointer sibling still needs a per-leaf zero guard; `chan-width` and `curr-tx-power-in-dbm` do arrive on those radios, so suppressing them to match the device CLI's `N/A` is fabrication inverted.
 - **Arbitrate on the device with `show running-config all`, and only for configuration.** It prints the negated form for a feature that is off, so a WLAN with no such line has it on. A display string follows the controller's own wording instead — `show ap ... config general` prints `AP Mode : FlexConnect`, so `mode-flex-connect` renders as `FlexConnect`.
 

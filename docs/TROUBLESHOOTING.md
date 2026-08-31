@@ -57,7 +57,7 @@ wnc show client --timeout 120s
 
 ## cause=tls
 
-The certificate did not verify. See [SECURITY.md](./SECURITY.md#trusting-a-private-certificate-authority) for trusting the issuer, which is preferable to `--insecure`.
+The certificate did not verify. See [`SECURITY.md`](./SECURITY.md#trusting-a-private-certificate-authority) for trusting the issuer, which is preferable to `--insecure`.
 
 ## cause=connection
 
@@ -143,7 +143,7 @@ The name is already on the controller and no binding flag was given, so there wa
 
 ## `delete` says the controller holds no tag of that name
 
-The name was read before the delete, and the controller does not have it. Tag names are case sensitive and each kind is a separate list, so a policy tag and an RF tag may share a name without being related. `wnc show ap-tag` names the tags in force; the controller's own configuration holds the ones nothing resolves to.
+The name was read before the delete, and the controller does not have it. Tag names are case sensitive and each kind is a separate list, so a policy tag and an RF tag may share a name without being related. `wnc show ap-tag` names the tags in force — the controller's own configuration holds the ones nothing resolves to.
 
 ## A tag write is refused with 400
 

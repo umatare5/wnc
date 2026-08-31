@@ -28,7 +28,7 @@ The hook path is the shared git common directory, so `make pre-commit-install` a
 
 ## Testing
 
-See [docs/TESTING.md](docs/TESTING.md) for how the suite is arranged, what the column invariants assert, and how the TLS test harness stands in for a controller.
+See [`docs/TESTING.md`](docs/TESTING.md) for how the suite is arranged, what the column invariants assert, and how the TLS test harness stands in for a controller.
 
 ## Build
 
