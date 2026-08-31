@@ -1,7 +1,7 @@
 # Repository Instructions
 
 > [!IMPORTANT]
-> Read [`README.md`](README.md) for project overview and the command reference.
+> Read [`README.md`](README.md) for the project overview, and [`docs/README.md`](docs/README.md) for the reference pages behind it.
 
 ## Tech Stack
 
@@ -12,15 +12,13 @@
 - [`olekukonko/tablewriter`](https://github.com/olekukonko/tablewriter) v1.1+ — borderless table writer
 - [`goreleaser`](https://goreleaser.com/) v2 — cross-platform release builds (see [`.goreleaser.yml`](.goreleaser.yml))
 
-Those four libraries are the whole direct third-party set; do not add a fifth. Configuration parsing and JSON output use the stdlib `encoding/json/v2`.
-
 ## Repository Structure
 
 - `cmd/` — Entry point (`main.go`); exits on what `internal/cli` returns
-- `internal/cli/` — urfave command tree, flag definitions, exit codes, the help text a leaf inherits from its group, and the `version` string ldflags sets
-- `internal/config/` — Flag, environment and JSON-file resolution in that precedence; the controller list, band-filter and tag-name grammars
+- `internal/cli/` — urfave command tree, flag definitions, exit codes, and the `version` string ldflags sets
+- `internal/config/` — Flag, environment and file resolution in that precedence, and the three grammars
 - `internal/log/` — logrus setup and the `*slog.Logger` the SDK takes
-- `internal/wnc/` — Sole importer of the SDK; `fetch_*.go` per command, and `tag.go`, `admin.go`, `reset.go`, `deauth.go` and `save.go` for the actions
+- `internal/wnc/` — Sole importer of the SDK; one `fetch_*.go` per read, and one file per action beside them
 - `internal/show/` — Per-command row building, the concurrent controller fan-out, and the enum display tables
 - `internal/render/` — `Column[T]`, shared by the table and the JSON writer so a column cannot exist in one only
 
@@ -31,7 +29,7 @@ Install required tools (one-time):
 - `go install gotest.tools/gotestsum@latest`
 - `golangci-lint` - See <https://golangci-lint.run/docs/welcome/install/>
 - `goreleaser` release builds (see [`.goreleaser.yml`](.goreleaser.yml))
-- `make pre-commit-install` wires `no-commit-to-main`, `golangci-lint`, `actionlint`, `gitleaks` and `markdownlint-cli2` (see [`.pre-commit-config.yaml`](.pre-commit-config.yaml))
+- `make pre-commit-install` wires every hook in [`.pre-commit-config.yaml`](.pre-commit-config.yaml)
 
 Make targets ([`Makefile`](Makefile)):
 
@@ -46,10 +44,11 @@ Make targets ([`Makefile`](Makefile)):
 
 ## Code Style
 
-- Linting and formatting are enforced by `golangci-lint` in the pre-commit hook (see [`.pre-commit-config.yaml`](.pre-commit-config.yaml)); its `formatters` block owns `gofumpt`, `gci`, `goimports` and `golines`.
-- A comment carries what the code cannot: a value another file must match, an order the controller rejects, an SDK quirk. One or two sentences, English, no emoji.
+- Linting and formatting are `golangci-lint`'s, and its `formatters` block owns every formatter it runs
+- A comment carries what the code cannot — a value another file must match, an order the device rejects
+- One or two sentences, English, no emoji, and nothing a reader can derive from the code beside it
 
-## Testing Instructions
+## Testing
 
 - Run `make test-unit` before committing.
 - Place tests next to code under test (`*_test.go`) and in the same package.
@@ -60,7 +59,7 @@ Make targets ([`Makefile`](Makefile)):
 - Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore(deps):`, etc.).
 - Sign off commits with `Signed-off-by:` (DCO).
 - Open PRs against `main`. CI runs lint, tests, CodeQL, govulncheck, actionlint, markdownlint and the link check.
-- Never commit a token, a device serial number, or a client-derived hostname, username or IPv6 address. A `192.168.0.0/16` lab address and a `lab*` name are the exception, and a real client value needs approval first.
+- Take every fixture and sample identity from [`docs/testing.md`](docs/testing.md#fixture-identities), never a value read off a device.
 
 ## Domain Knowledge
 
