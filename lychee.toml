@@ -7,4 +7,5 @@ exclude_all_private = true
 exclude = [
   "^https://www\\.cisco\\.com/",
   "^https://github\\.com/umatare5/wnc/releases/tag/",
+  "^https://github\\.com/umatare5/wnc/compare/",
 ]
