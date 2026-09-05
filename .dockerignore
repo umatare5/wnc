@@ -1,5 +1,5 @@
 # The image is assembled by goreleaser from a context holding only the binary and the
-# licence notices, so nothing in the repository needs to be sent.
+# license notices, so nothing in the repository needs to be sent.
 *
 !wnc
 !LICENSE

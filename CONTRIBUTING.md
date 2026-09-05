@@ -24,7 +24,7 @@ The following `make` commands are available for development and testing:
 
 Two files are maintained by hand. [`docs/help.md`](docs/help.md) transcribes `--help` for every command, so a change to a flag, a usage line or a command description updates it.
 
-[`NOTICE`](NOTICE) reproduces the licence of every module the binary links, so a change to the linked module set updates that one.
+[`NOTICE`](NOTICE) reproduces the license of every module the binary links, so a change to the linked module set updates that one.
 
 Markdown style is enforced by the `markdownlint-cli2` hook that `make pre-commit-install` wires in, and again in CI. Links are checked in CI only, because that run reaches third-party hosts. Run `lychee .` to reproduce a link failure locally.
 

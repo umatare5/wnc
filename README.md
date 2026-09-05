@@ -149,6 +149,6 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the `make` targets, the Docker buil
 
 I launched this project with the help of **GitHub Copilot Coding Agent**, and I am grateful to the global developer community for their contributions to open source projects and public repositories.
 
-## Licence
+## License
 
 MIT. The binary statically links MIT and BSD 3-Clause dependencies, whose notices are reproduced in [`NOTICE`](NOTICE) and shipped alongside [`LICENSE`](LICENSE) in every release archive and container image.

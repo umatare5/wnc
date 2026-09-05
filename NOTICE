@@ -4,7 +4,7 @@ Copyright (c) 2025 umatare5
 This product is distributed under the MIT License — see the LICENSE file for
 its terms. The binaries and container images published for this project
 statically link the third-party Go modules named below, and this file carries
-the notices their licences require on redistribution in binary form.
+the notices their licenses require on redistribution in binary form.
 
 The list is the set of modules "go list -deps ./cmd" reports for the published
 platforms, and the version of each is recorded in go.mod and go.sum. Except
@@ -15,9 +15,9 @@ where stated otherwise, every module is linked on all published platforms.
 MIT License
 ===============================================================================
 
-The following modules are licensed under the MIT License. The licence text of
+The following modules are licensed under the MIT License. The license text of
 each is reproduced below, carrying the copyright notice and the permission
-notice that licence requires in all copies or substantial portions.
+notice that license requires in all copies or substantial portions.
 
 -------------------------------------------------------------------------------
 github.com/cespare/xxhash/v2
@@ -374,8 +374,8 @@ SOFTWARE.
 BSD 3-Clause License
 ===============================================================================
 
-The following module is licensed under the BSD 3-Clause License. Its licence
-text is reproduced below, as that licence's second clause requires of a
+The following module is licensed under the BSD 3-Clause License. Its license
+text is reproduced below, as that license's second clause requires of a
 redistribution in binary form.
 
 -------------------------------------------------------------------------------
