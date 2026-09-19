@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/show"
+	"github.com/umatare5/cisco-wnc-cli/internal/show"
 )
 
 // Exit codes. A run that reached every controller and rendered its rows exits 0

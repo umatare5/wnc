@@ -9,8 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 	sdk "github.com/umatare5/cisco-ios-xe-wireless-go"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/log"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/log"
 )
 
 // Client is the CLI's handle on one controller.

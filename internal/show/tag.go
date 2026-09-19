@@ -3,9 +3,9 @@ package show
 import (
 	"context"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/render"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 // The three views below list what set and delete write. show ap-tag reports only the tags

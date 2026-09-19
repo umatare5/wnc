@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"github.com/umatare5/wnc/internal/cli"
+	"github.com/umatare5/cisco-wnc-cli/internal/cli"
 )
 
 func main() {

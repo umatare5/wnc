@@ -228,13 +228,13 @@ formatters:
       sections:
         - standard
         - default
-        - prefix(github.com/umatare5/wnc)
+        - prefix(github.com/umatare5/cisco-wnc-cli)
     gofumpt:
       extra:
         group-params: true
     goimports:
       local-prefixes:
-        - github.com/umatare5/wnc
+        - github.com/umatare5/cisco-wnc-cli
     golines:
       max-len: 120
 

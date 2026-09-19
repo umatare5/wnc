@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 func yes() *bool { v := true; return &v }

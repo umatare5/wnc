@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/umatare5/wnc/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
 )
 
 // Addresses in fixtures come from the documentation range RFC 7042 reserves, so no

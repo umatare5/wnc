@@ -1,6 +1,6 @@
 package show
 
-import "github.com/umatare5/wnc/internal/render"
+import "github.com/umatare5/cisco-wnc-cli/internal/render"
 
 // Glyphs for the bordered table. Each must be one code point whose width does not move with the
 // reader's locale: a U+FE0F selector or an East Asian ambiguous character asks for a two-column

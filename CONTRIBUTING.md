@@ -53,11 +53,11 @@ To release a new version, follow these steps:
 3. Refresh the coverage badge — `make test-unit` then `octocov badge coverage --config .octocov.yml > docs/assets/coverage.svg`. Nothing automates it — the reusable coverage workflow enforces the floor but writes no badge.
 4. Submit a pull request with all three files.
 
-Merging that pull request is the whole release. A push to `main` touching `VERSION` runs the [release workflow](https://github.com/umatare5/wnc/actions/workflows/go-release.yml), which tags the commit and publishes the release in the same run. The workflow has no manual trigger, so there is no step to perform by hand.
+Merging that pull request is the whole release. A push to `main` touching `VERSION` runs the [release workflow](https://github.com/umatare5/cisco-wnc-cli/actions/workflows/go-release.yml), which tags the commit and publishes the release in the same run. The workflow has no manual trigger, so there is no step to perform by hand.
 
 ## Pull requests
 
-1. [Fork](https://github.com/umatare5/wnc/fork) the repository
+1. [Fork](https://github.com/umatare5/cisco-wnc-cli/fork) the repository
 2. Create a feature branch
 3. Commit your changes, following the surrounding style and signing off with `Signed-off-by:`
 4. Add tests — CI enforces a coverage floor — and update the documentation alongside the code

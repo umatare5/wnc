@@ -7,9 +7,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/render"
-	"github.com/umatare5/wnc/internal/show"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/show"
 )
 
 // showCommand groups the read-only views.

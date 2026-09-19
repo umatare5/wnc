@@ -9,8 +9,8 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 // deauthCommand drops a client's session. It is a flat tree rather than a reset leaf: that tree

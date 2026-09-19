@@ -6,6 +6,6 @@ exclude_all_private = true
 # 404s until that merge lands.
 exclude = [
   "^https://www\\.cisco\\.com/",
-  "^https://github\\.com/umatare5/wnc/releases/tag/",
-  "^https://github\\.com/umatare5/wnc/compare/",
+  "^https://github\\.com/umatare5/cisco-wnc-cli/releases/tag/",
+  "^https://github\\.com/umatare5/cisco-wnc-cli/compare/",
 ]

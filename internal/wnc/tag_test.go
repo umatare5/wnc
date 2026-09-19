@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/log"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/log"
 )
 
 // exchange is one request the recorder saw.

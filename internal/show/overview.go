@@ -3,9 +3,9 @@ package show
 import (
 	"context"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/render"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 // OverviewRow is one row of show overview: one access point radio. ap_mac is the access point's

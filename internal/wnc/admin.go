@@ -5,7 +5,7 @@ import (
 
 	"github.com/umatare5/cisco-ios-xe-wireless-go/service/ap"
 
-	"github.com/umatare5/wnc/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
 )
 
 // RadioAdmin is one radio's identity and admin state. BandWire is the number

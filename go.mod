@@ -1,4 +1,4 @@
-module github.com/umatare5/wnc
+module github.com/umatare5/cisco-wnc-cli
 
 go 1.27
 

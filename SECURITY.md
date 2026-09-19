@@ -6,7 +6,7 @@ Only the most recent tagged release carries fixes — reproduce a finding agains
 
 ## Reporting a Vulnerability
 
-Report privately through [GitHub Security Advisories](https://github.com/umatare5/wnc/security/advisories/new). **Please do not report a vulnerability through a public GitHub issue or a pull request.**
+Report privately through [GitHub Security Advisories](https://github.com/umatare5/cisco-wnc-cli/security/advisories/new). **Please do not report a vulnerability through a public GitHub issue or a pull request.**
 
 The response is best effort, with no promised window. The advisory goes out once the fix ships, carries a CVE request, and credits the reporter unless they ask otherwise.
 

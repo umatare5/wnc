@@ -6,9 +6,9 @@ The rebuilt CLI shares no code with the implementation before it, so every inter
 
 ## [v0.2.0]
 
-- [#80](https://github.com/umatare5/wnc/pull/80) — Rebuild the CLI and modernize the development base
-- [#81](https://github.com/umatare5/wnc/pull/81) — Restore the link check triggers and fix the image COPY path
-- [#82](https://github.com/umatare5/wnc/pull/82) — Pin the documentation skeletons and ship the license notices
-- [#83](https://github.com/umatare5/wnc/pull/83) — Restructure the documentation set and pin its heading skeletons
+- [#80](https://github.com/umatare5/cisco-wnc-cli/pull/80) — Rebuild the CLI and modernize the development base
+- [#81](https://github.com/umatare5/cisco-wnc-cli/pull/81) — Restore the link check triggers and fix the image COPY path
+- [#82](https://github.com/umatare5/cisco-wnc-cli/pull/82) — Pin the documentation skeletons and ship the license notices
+- [#83](https://github.com/umatare5/cisco-wnc-cli/pull/83) — Restructure the documentation set and pin its heading skeletons
 
-[v0.2.0]: https://github.com/umatare5/wnc/releases/tag/v0.2.0
+[v0.2.0]: https://github.com/umatare5/cisco-wnc-cli/releases/tag/v0.2.0

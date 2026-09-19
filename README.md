@@ -1,9 +1,9 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo_dark.png" width="115px" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="115px" />
-    <img alt="wnc" src="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/logo.png" width="115px" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/umatare5/cisco-wnc-cli/main/docs/assets/logo_dark.png" width="115px" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/umatare5/cisco-wnc-cli/main/docs/assets/logo.png" width="115px" />
+    <img alt="wnc" src="https://raw.githubusercontent.com/umatare5/cisco-wnc-cli/main/docs/assets/logo.png" width="115px" />
   </picture>
 
   <h1>wnc</h1>
@@ -11,10 +11,10 @@
   <p>A command-line interface for Cisco Catalyst 9800 Wireless Network Controllers.</p>
 
   <p>
-    <img alt="GitHub Tag" src="https://img.shields.io/github/v/tag/umatare5/wnc?label=Latest%20version" />
-    <a href="https://github.com/umatare5/wnc/actions/workflows/go-test-build.yml"><img alt="Test and Build" src="https://github.com/umatare5/wnc/actions/workflows/go-test-build.yml/badge.svg?branch=main" /></a>
-    <a href="https://github.com/umatare5/wnc/actions/workflows/go-vulncheck.yml"><img alt="govulncheck" src="https://github.com/umatare5/wnc/actions/workflows/go-vulncheck.yml/badge.svg?branch=main" /></a><br>
-    <img alt="Test Coverage" src="https://raw.githubusercontent.com/umatare5/wnc/main/docs/assets/coverage.svg" />
+    <img alt="GitHub Tag" src="https://img.shields.io/github/v/tag/umatare5/cisco-wnc-cli?label=Latest%20version" />
+    <a href="https://github.com/umatare5/cisco-wnc-cli/actions/workflows/go-test-build.yml"><img alt="Test and Build" src="https://github.com/umatare5/cisco-wnc-cli/actions/workflows/go-test-build.yml/badge.svg?branch=main" /></a>
+    <a href="https://github.com/umatare5/cisco-wnc-cli/actions/workflows/go-vulncheck.yml"><img alt="govulncheck" src="https://github.com/umatare5/cisco-wnc-cli/actions/workflows/go-vulncheck.yml/badge.svg?branch=main" /></a><br>
+    <img alt="Test Coverage" src="https://raw.githubusercontent.com/umatare5/cisco-wnc-cli/main/docs/assets/coverage.svg" />
     <a href="https://www.bestpractices.dev/projects/10820"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/10820/badge" /></a>
     <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
     <a href="https://developer.cisco.com/codeexchange/github/repo/umatare5/wnc"><img alt="Published" src="https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg" /></a>
@@ -52,7 +52,7 @@ docker run --rm ghcr.io/umatare5/wnc:latest --help
 ```
 
 > [!TIP]
-> If you prefer using binaries, download them from the [Release](https://github.com/umatare5/wnc/releases).
+> If you prefer using binaries, download them from the [Release](https://github.com/umatare5/cisco-wnc-cli/releases).
 >
 > **Supported Platform:** `linux_amd64`, `linux_arm64`, `darwin_amd64`, `darwin_arm64` and `windows_amd64`
 
