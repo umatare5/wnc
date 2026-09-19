@@ -10,9 +10,9 @@ import (
 
 	"github.com/olekukonko/tablewriter/pkg/twwidth"
 
-	"github.com/umatare5/wnc/internal/config"
-	"github.com/umatare5/wnc/internal/render"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 var target = config.Target{Name: "test-wlc"}

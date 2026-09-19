@@ -7,7 +7,7 @@ COVERAGE_DIR := ./coverage
 IMAGE_DIR := $(BUILD_DIR)/image
 GOARCH := $(shell go env GOARCH)
 
-LDFLAGS := -X github.com/umatare5/wnc/internal/cli.version=$(shell cat VERSION)
+LDFLAGS := -X github.com/umatare5/cisco-wnc-cli/internal/cli.version=$(shell cat VERSION)
 BUILD_FLAGS := -trimpath -ldflags "$(LDFLAGS)"
 
 .DEFAULT_GOAL := help

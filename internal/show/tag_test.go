@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/umatare5/wnc/internal/render"
-	"github.com/umatare5/wnc/internal/wnc"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/wnc"
 )
 
 // A tag binding three WLANs is three rows and a tag binding none is one, so a tag that

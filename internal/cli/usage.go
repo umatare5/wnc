@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
 )
 
 // onUsageError turns a parse fault into an ErrUsage chain. Returning early here

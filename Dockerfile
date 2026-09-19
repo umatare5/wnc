@@ -21,5 +21,5 @@ CMD ["--help"]
 LABEL org.opencontainers.image.title="wnc"
 LABEL org.opencontainers.image.description="CLI for Cisco Catalyst 9800 Wireless Network Controllers"
 LABEL org.opencontainers.image.vendor="umatare5"
-LABEL org.opencontainers.image.source="https://github.com/umatare5/wnc"
+LABEL org.opencontainers.image.source="https://github.com/umatare5/cisco-wnc-cli"
 LABEL org.opencontainers.image.licenses="MIT"

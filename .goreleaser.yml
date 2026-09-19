@@ -26,7 +26,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X 'github.com/umatare5/wnc/internal/cli.version={{ .Version }}'
+      - -s -w -X 'github.com/umatare5/cisco-wnc-cli/internal/cli.version={{ .Version }}'
     hooks:
       post:
         # The setting is recorded in the binary, so this fails the release if cgo crept
@@ -63,8 +63,8 @@ dockers_v2:
     labels:
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: "CLI for Cisco Catalyst 9800 Wireless Network Controllers"
-      org.opencontainers.image.url: "https://github.com/umatare5/wnc"
-      org.opencontainers.image.source: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.url: "https://github.com/umatare5/cisco-wnc-cli"
+      org.opencontainers.image.source: "https://github.com/umatare5/cisco-wnc-cli"
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
@@ -84,8 +84,8 @@ dockers_v2:
     labels:
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: "CLI for Cisco Catalyst 9800 Wireless Network Controllers"
-      org.opencontainers.image.url: "https://github.com/umatare5/wnc"
-      org.opencontainers.image.source: "https://github.com/umatare5/wnc"
+      org.opencontainers.image.url: "https://github.com/umatare5/cisco-wnc-cli"
+      org.opencontainers.image.source: "https://github.com/umatare5/cisco-wnc-cli"
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
@@ -114,7 +114,7 @@ release:
 
     Download a prebuilt binary for your platform from the assets below.
   footer: |
-    **Full Changelog**: https://github.com/umatare5/wnc/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/umatare5/cisco-wnc-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 checksum:
   name_template: "{{ .ProjectName }}-v{{ .Version }}_checksums.txt"

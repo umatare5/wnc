@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/umatare5/wnc/internal/render"
+	"github.com/umatare5/cisco-wnc-cli/internal/render"
 )
 
 // A column is declared in three places: the key list --sort-by validates against, the Column list

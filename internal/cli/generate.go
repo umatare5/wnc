@@ -9,7 +9,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/config"
+	"github.com/umatare5/cisco-wnc-cli/internal/config"
 )
 
 // generateTokenCommand prints the RESTCONF Basic auth token, and is the one command that contacts

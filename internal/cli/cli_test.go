@@ -10,7 +10,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/umatare5/wnc/internal/show"
+	"github.com/umatare5/cisco-wnc-cli/internal/show"
 )
 
 // Nothing in this file runs in parallel, and that is deliberate. urfave reads the
